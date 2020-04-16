@@ -44,6 +44,8 @@ var
 
 implementation
 
+uses Unit4;
+
 procedure TshowLogin.CreateParams(var Params: TCreateParams) ;
 begin
   inherited;
@@ -66,19 +68,10 @@ end;
 procedure TshowLogin.FormPaint(Sender: TObject);
 var bg:TBitMap;
 begin
- if clicked = 1 then
-  begin
-    bg := TBitmap.Create;
-    bg.LoadFromFile('images/background-dark_blur.bmp');
-    showLogin.Canvas.Draw(0, 0, bg);
-  end
-  else
-  begin
-    bg := TBitmap.Create;
-    bg.LoadFromFile('images/background-dark.bmp');
-    showLogin.Canvas.Draw(0, 0, bg);
-    bg.Free;
-  end;
+  bg := TBitmap.Create;
+  bg.LoadFromFile('images/background-dark.bmp');
+  showLogin.Canvas.Draw(0, 0, bg);
+  bg.Free;
 end;
 
 //  </main>
@@ -126,10 +119,7 @@ end;
 
 procedure TshowLogin.signIn_btnClick(Sender: TObject);
 begin
-  clicked := 1;
-  showLogin.FormPaint(self);
-  firstEnterprice.Hide;
-  showLogin.Enabled := false;
+  loginForm.Show;
 end;
 
 procedure TshowLogin.collapse_btnClick(Sender: TObject);

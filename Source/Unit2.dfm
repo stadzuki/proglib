@@ -233,10 +233,10 @@ object showLogin: TshowLogin
     OnClick = signIn_btnClick
   end
   object how_text: TLabel
-    Left = 320
+    Left = 328
     Top = 260
-    Width = 99
-    Height = 18
+    Width = 81
+    Height = 16
     Caption = #1080#1083#1080' '#1074#1086#1081#1090#1080' '#1082#1072#1082
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
@@ -246,7 +246,7 @@ object showLogin: TshowLogin
     ParentFont = False
   end
   object guest_btn: TImage
-    Left = 423
+    Left = 415
     Top = 260
     Width = 58
     Height = 20
@@ -283,7 +283,7 @@ object showLogin: TshowLogin
     Left = 130
     Top = 413
     Width = 5
-    Height = 26
+    Height = 22
     Alignment = taCenter
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
