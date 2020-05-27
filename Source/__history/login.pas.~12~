@@ -1,0 +1,148 @@
+unit login;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, enter, Vcl.Imaging.pngimage,
+  Vcl.ExtCtrls, Vcl.StdCtrls;
+
+type
+  TshowLogin = class(TForm)
+    shutdown_btn: TImage;
+    collapse_btn: TImage;
+    signIn_btn: TImage;
+    how_text: TLabel;
+    guest_btn: TImage;
+    text_space: TLabel;
+    procedure shutdown_btnClick(Sender: TObject);
+    procedure collapse_btnClick(Sender: TObject);
+    procedure FormPaint(Sender: TObject);
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure FormActivate(Sender: TObject);
+    procedure signIn_btnClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  protected
+    procedure CreateParams(var Params: TCreateParams) ; override;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  showLogin: TshowLogin;
+  //mouseMoving
+  mouseMoving : boolean;
+  mouseX, mouseY : integer;
+  //Other
+  clicked:byte;//click on signIn_btn
+
+
+implementation
+
+uses enterform, database;
+
+procedure TshowLogin.CreateParams(var Params: TCreateParams) ;
+begin
+  inherited;
+  Params.ExStyle := Params.ExStyle or WS_EX_APPWINDOW;
+  Params.WndParent := 0;
+end;
+
+{$R *.dfm}
+//  <main>
+
+procedure TshowLogin.FormActivate(Sender: TObject);
+begin
+  //--------------------
+  mouseMoving := false;//Moving 'showLogin' TForm
+  //--------------------
+  text_space.Caption := 'СОВЕТ: советуем вам войти в аккаунт или его создать'+chr(13)+'для удобства использования программы';
+end;
+
+
+procedure TshowLogin.FormCreate(Sender: TObject);
+begin
+  //firstEnterprice.Hide;
+  if firstform = true then  begin
+    firstEnterprice.Hide;
+    firstform := false
+  end;
+end;
+
+procedure TshowLogin.FormPaint(Sender: TObject);
+var bg:TBitMap;
+begin
+  bg := TBitmap.Create;
+  bg.LoadFromFile('images/background-dark.bmp');
+  showLogin.Canvas.Draw(0, 0, bg);
+  bg.Free;
+end;
+
+//  </main>
+
+//  <mouseLogic>
+
+procedure TshowLogin.FormMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  mouseMoving := true;
+  mouseX := X;
+  mouseY := Y;
+  AlphaBlend := true;//opacity on/off
+  AlphaBlendValue := 180;//opacity value
+end;
+
+procedure TshowLogin.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if mouseMoving then
+  begin
+    left := left + (x - mouseX);
+    top := top + (y - mouseY);
+  end;
+
+end;
+
+procedure TshowLogin.FormMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  mouseMoving := false;
+  AlphaBlend := false;
+end;
+
+//  </mouseLogic>
+
+//  <clickLogic>
+
+procedure TshowLogin.shutdown_btnClick(Sender: TObject);
+begin
+  firstEnterprice.Hide;
+  firstEnterprice.Close;
+end;
+
+
+procedure TshowLogin.signIn_btnClick(Sender: TObject);
+begin
+  loginForm.loginField.Text:='Введите логин';
+  loginForm.passwordfield.Text:='Введите пароль';
+  loginForm.passwordField.PasswordChar:=#0;
+  loginForm.login_title.Caption:='Авторизация';
+  loginForm.login_description.Caption:='Заполните поля чтобы авторизоваться';
+  loginForm.login_description.Left:= 98;
+  loginForm.Show;
+  showLogin.Enabled := false;
+end;
+
+procedure TshowLogin.collapse_btnClick(Sender: TObject);
+begin
+  WindowState:= wsMinimized;
+end;
+
+//  </clickLogic>
+end.

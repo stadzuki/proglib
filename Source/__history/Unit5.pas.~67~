@@ -1,0 +1,103 @@
+unit Unit5;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.pngimage, Vcl.ExtCtrls,
+  Vcl.StdCtrls;
+
+type
+  Ttheme = class(TForm)
+    overlay: TImage;
+    overlay_text: TLabel;
+    okey_btn: TImage;
+    arrow_left: TImage;
+    arrow_right: TImage;
+    choose_btn: TImage;
+    close_btn: TImage;
+    procedure FormPaint(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+    procedure okey_btnClick(Sender: TObject);
+    procedure arrow_rightClick(Sender: TObject);
+    procedure close_btnClick(Sender: TObject);
+  protected
+    procedure CreateParams(var Params: TCreateParams) ; override;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  theme: Ttheme;
+  //mouseMoving
+  mouseMoving:boolean;
+  mouseX, mouseY:integer;
+  //theme
+  theme_style:boolean;
+
+implementation
+
+{$R *.dfm}
+
+uses connection, Unit4, enter, login, Unit6;
+
+procedure Ttheme.CreateParams(var Params: TCreateParams) ;
+begin
+  inherited;
+  Params.ExStyle := Params.ExStyle or WS_EX_APPWINDOW;
+  Params.WndParent := 0;
+end;
+
+    {TForm background}
+procedure Ttheme.FormPaint(Sender: TObject);
+var bg:TBitMap;//background image to firstEnterprise form
+begin
+  bg:=TBitMap.Create;
+  if theme_style = false then bg.LoadFromFile('images/choose-light.bmp')
+  else bg.LoadFromFile('images/choose-dark.bmp'); //src
+  theme.Canvas.Draw(0,0,bg); //position and picture
+  bg.Free;
+end;
+
+procedure Ttheme.okey_btnClick(Sender: TObject);
+begin
+  overlay.Destroy;
+  overlay_text.Visible := false;
+  okey_btn.Visible := false;
+  choose_btn.Visible := true;
+  close_btn.Visible := true;
+  arrow_left.Enabled := true;
+  arrow_right.Enabled := true;
+
+end;
+
+procedure Ttheme.arrow_rightClick(Sender: TObject);
+begin
+  if theme_style = true then theme_style := false
+  else theme_style := true;
+  theme.FormPaint(self);
+  arrow_right.BringToFront;
+  arrow_left.BringToFront;
+  close_btn.BringToFront;
+  choose_btn.BringToFront;
+end;
+
+procedure Ttheme.close_btnClick(Sender: TObject);
+begin
+  firstEnterprice.Hide;
+  firstEnterprice.Close;
+end;
+
+procedure Ttheme.FormActivate(Sender: TObject);
+begin
+  arrow_left.Enabled := false;
+  arrow_right.Enabled := false;
+  theme_style := true; // theme_style = true - dark theme, theme_style = false - light theme
+  overlay.Width := 800;
+  overlay_text.Caption := 'Выберите тему по вкусу'+chr(13)+'с помощью стрелочек';
+//  arrow_right.t
+end;
+
+end.

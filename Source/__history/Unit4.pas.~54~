@@ -1,0 +1,184 @@
+unit Unit4;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Imaging.pngimage,
+  Vcl.ExtCtrls, RegularExpressions;
+
+type
+  TloginForm = class(TForm)
+    login_title: TLabel;
+    loginField: TEdit;
+    passwordField: TEdit;
+    login_description: TLabel;
+    enter_btn: TImage;
+    deny_btn: TImage;
+    login_subtitle: TLabel;
+    reg_btn: TImage;
+    arrow_btn: TImage;
+    procedure FormActivate(Sender: TObject);
+    procedure FormPaint(Sender: TObject);
+    procedure passwordFieldClick(Sender: TObject);
+    procedure loginFieldClick(Sender: TObject);
+    procedure deny_btnClick(Sender: TObject);
+    procedure enter_btnClick(Sender: TObject);
+    procedure reg_btnClick(Sender: TObject);
+    procedure arrow_btnClick(Sender: TObject);
+  protected
+    procedure CreateParams(var Params: TCreateParams) ; override;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+const valid = '^[\w-.]{0,24}$';
+
+var
+  loginForm: TloginForm;
+  RegState:boolean;
+
+implementation
+
+{$R *.dfm}
+
+uses Unit2, Unit1, connection, Unit5;
+
+procedure theme_control(login:string);
+begin
+  data_module.MyQuery1.SQL.Text := 'SELECT theme FROM users WHERE u_login = :u_login;';
+  data_module.MyQuery1.ParamByName('u_login').AsString := login;
+  showmessage(login);
+  showmessage(data_module.MyQuery1['u_login']);
+  if data_module.MyQuery1['theme'] = 0 then
+  begin
+    theme.Show;
+    loginForm.Hide;
+  end
+  else showmessage('MainWindow');
+
+//  if data_module.MyQuery1.IsEmpty = true then
+//  begin
+//    theme.Show;
+//    loginForm.Hide;
+//  end
+//  else showmessage('MainWindow');
+end;
+
+procedure TloginForm.CreateParams(var Params: TCreateParams) ;
+begin
+  inherited;
+  Params.ExStyle := Params.ExStyle or WS_EX_APPWINDOW;
+  Params.WndParent := 0;
+end;
+
+procedure TloginForm.deny_btnClick(Sender: TObject);
+begin
+  showLogin.Enabled:=true;
+  login_subtitle.Visible:=true;
+  reg_btn.Visible:=true;
+  loginForm.Hide;
+end;
+
+procedure TloginForm.enter_btnClick(Sender: TObject);
+var check_type, check_theme:integer;
+begin
+  if (RegState = true) then// Этап регистрации
+  begin
+    data_module.MyQuery1.SQL.Text := 'SELECT * FROM users WHERE u_login = :u_login;';
+    data_module.MyQuery1.ParamByName('u_login').AsString := loginField.Text;
+    data_module.MyQuery1.Open;
+    if data_module.MyQuery1.IsEmpty then
+    begin
+      if (length(loginField.text) < 24) and (length(passwordField.text) < 24) and (length(loginField.text) > 4) and (length(passwordField.text) > 4) and (TRegEx.IsMatch(loginField.Text, valid)) and (TRegEx.IsMatch(passwordField.Text, valid)) then
+      begin
+        try
+          data_module.MyQuery1.SQL.Clear;
+          data_module.MyQuery1.SQL.Add('INSERT INTO users (u_login, u_pass) VALUES (:u_login, :u_pass);');
+          data_module.MyQuery1.ParamByName('u_login').AsString := loginField.Text;
+          data_module.MyQuery1.ParamByName('u_pass').AsString := passwordField.Text;
+          data_module.MyQuery1.Execute;
+        finally
+          data_module.MyQuery1.Free;
+          showLogin.Enabled:=true;
+          loginForm.Hide;
+          RegState:=false;
+        end;
+      end
+      else showmessage('Поля должны состоять из латинских символов длинной не менее 4-х символов и не более 24-х');
+    end
+    else showmessage('Такой пользователь уже существует!');
+  end
+  else if (RegState = false) then  //АВТОРИЗАЦИЯ
+  begin
+    data_module.MyQuery1.SQL.Text := 'SELECT * FROM users WHERE u_login = :u_login AND u_pass = :u_pass;';
+    data_module.MyQuery1.ParamByName('u_login').AsString := loginField.Text;
+    data_module.MyQuery1.ParamByName('u_pass').AsString := passwordField.Text;
+    data_module.MyQuery1.Open;
+    if data_module.MyQuery1.IsEmpty = false then
+    begin
+      data_module.MyQuery1.SQL.Text := 'SELECT u_theme FROM users WHERE u_login = :u_login;';
+      data_module.MyQuery1.ParamByName('u_login').AsString := loginField.Text;
+      data_module.MyQuery1.Open;
+      if data_module.MyQuery1['u_theme'] = -1 then
+      begin
+        showLogin.close;
+        theme.Show;
+        loginForm.Hide;
+      end
+      else showmessage('MainWindow');
+    end
+    else showmessage('Логин или пароль указан неверно!');
+  end;
+end;
+
+procedure TloginForm.FormActivate(Sender: TObject);
+begin
+  login_subtitle.Caption := 'Если у вас нету аккаунта,'+chr(13)+'то нажмите'+'       ';
+  RegState:=false;
+  login_subtitle.Visible:=true;
+  reg_btn.Visible:=true;
+  enter_btn.Picture.LoadFromFile('images/enter-btn.png');
+end;
+
+procedure TloginForm.FormPaint(Sender: TObject);
+var bg:TBitMap;
+begin
+  bg := TBitmap.Create;
+  bg.LoadFromFile('images/bg-login.bmp');
+  loginForm.Canvas.Draw(0, 0, bg);
+  bg.Free;
+end;
+
+procedure TloginForm.arrow_btnClick(Sender: TObject);
+begin
+  loginForm.deny_btnClick(nil);
+end;
+
+procedure TloginForm.loginFieldClick(Sender: TObject);
+begin
+  loginField.Text:='';
+end;
+
+procedure TloginForm.passwordFieldClick(Sender: TObject);
+begin
+  passwordField.Text:='';
+  passwordField.PasswordChar:=#42;
+end;
+
+procedure TloginForm.reg_btnClick(Sender: TObject);
+begin
+  RegState:=true;
+  loginForm.loginField.Text:='Введите логин';
+  loginForm.passwordfield.Text:='Введите пароль';
+  login_title.Caption := 'Регистрация';
+  login_description.Left:=88;
+  login_description.Caption := 'Заполните  поля чтобы зарегистрироваться';
+  login_subtitle.Visible:=false;
+  reg_btn.Visible:=false;
+  enter_btn.Picture.LoadFromFile('images/reg-btn.png');
+end;
+
+end.

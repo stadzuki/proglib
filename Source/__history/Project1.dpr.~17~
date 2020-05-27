@@ -1,0 +1,33 @@
+program Project1;
+
+uses
+  Vcl.Forms,
+  enter in 'enter.pas' {firstEnterprice},
+  login in 'login.pas' {showLogin},
+  connection in 'connection.pas' {data_module},
+  themes in 'themes.pas' {theme},
+  main in 'main.pas' {Form6},
+  enterform in 'enterform.pas' {Form1};
+
+{$R *.res}
+
+ procedure SetAsMainForm(aForm:TForm);
+ var
+   P:Pointer;
+ begin
+   P := @Application.Mainform;
+   Pointer(P^) := aForm;
+ end;
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TfirstEnterprice, firstEnterprice);
+  Application.CreateForm(TshowLogin, showLogin);
+  Application.CreateForm(Tdata_module, data_module);
+  Application.CreateForm(Ttheme, theme);
+  Application.CreateForm(TForm6, Form6);
+  Application.CreateForm(TloginForm, loginForm);
+  Application.Run;
+
+end.
