@@ -19,7 +19,6 @@ object contentPage: TcontentPage
   Position = poDesktopCenter
   Scaled = False
   OnActivate = FormActivate
-  OnCreate = FormCreate
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp
@@ -176,7 +175,7 @@ object contentPage: TcontentPage
     Left = 787
     Top = 30
     Width = 5
-    Height = 375
+    Height = 500
     Picture.Data = {
       0954506E67496D61676589504E470D0A1A0A0000000D49484452000000050000
       01B708060000007C1A9F2F0000006E4944415478DAEDDAB10984501004D035B1
@@ -185,5 +184,6 @@ object contentPage: TcontentPage
       1042082184104208218410420821FC0F5F9F39AF1F9EF2F699A37AFB5C4A0C6D
       783C7602350000000049454E44AE426082}
     Stretch = True
+    Visible = False
   end
 end

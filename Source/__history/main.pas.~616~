@@ -190,8 +190,7 @@ end;
 
 procedure ThomePage.exit_yesClick(Sender: TObject);
 begin
-  homePage.Hide;
-  firstEnterprice.Hide;
+  homePage.close;
   firstEnterprice.Close;
 end;
 
@@ -215,14 +214,14 @@ procedure ThomePage.bookClick(Sender: TObject);
 begin
   StateType := 0;
   contentPage.Show;
-  homePage.Hide;
+  homePage.Close;
 end;
 
 procedure ThomePage.cheatClick(Sender: TObject);
 begin
   StateType := 3;
   contentPage.Show;
-  homePage.Hide;
+  homePage.Close;
 end;
 
 procedure ThomePage.close_settingsClick(Sender: TObject);
@@ -257,14 +256,16 @@ procedure ThomePage.FormActivate(Sender: TObject);
 begin
   clicked:=0;
   clicked2:=0;
+  user_settings.Height := 184;
+  admin_settings.Visible := false;
 
   db.QueryTheme.SQL.Text := 'SELECT u_theme FROM users WHERE u_login = ' +QuotedStr(loginForm.loginField.Text);
   db.QueryTheme.Open;
 
-  db.QueryAdmin.SQL.Text := 'SELECT admin FROM users WHERE u_login = ' +QuotedStr(loginForm.loginField.Text);
+  db.QueryAdmin.SQL.Text := 'SELECT u_admin FROM users WHERE u_login = ' +QuotedStr(loginForm.loginField.Text);
   db.QueryAdmin.Open;
 
-  if db.QueryAdmin['admin'] > 0 then admin_settings.Visible := true;
+  if db.QueryAdmin['u_admin'] = 1 then admin_settings.Visible := true;
 
   formatName := loginForm.loginField.Text;
   arrow_active := true;
@@ -354,7 +355,7 @@ procedure ThomePage.libClick(Sender: TObject);
 begin
   StateType := 2;
   contentPage.Show;
-  homePage.Hide;
+  homePage.Close;
 end;
 
 procedure ThomePage.nav_exitClick(Sender: TObject);
@@ -612,12 +613,12 @@ procedure ThomePage.program_toolClick(Sender: TObject);
 begin
   StateType := 1;
   contentPage.Show;
-  homePage.Hide;
+  homePage.Close;
 end;
 
 procedure ThomePage.shutdown_btnClick(Sender: TObject);
 begin
-  firstEnterprice.Hide;
+  homePage.Close;
   firstEnterprice.Close;
 end;
 
@@ -782,6 +783,7 @@ begin
     if (length(pass.text) < 3) and (length(pass.text) > 24) and (length(repeat_pass.text) < 3) and (length(repeat_pass.text) > 24) then
     begin
       showmessage('Количество символов не должно быть более 24-х символов и не менее 4-х');
+      pass.PasswordChar := #0; repeat_pass.PasswordChar := #0;
       pass.Text := 'Введите текущий пароль';  repeat_pass.Text := 'Введите новый пароль';
       exit;
     end;
@@ -792,7 +794,7 @@ begin
 //      if db.QueryAuth.IsEmpty = true then
       if AnsiCompareStr(db.QueryAuth['u_pass'], pass.Text) = 0 then
       begin
-        if AnsiCompareStr(repeat_pass.text, pass.Text) = 0 then begin showmessage('Пароли не могут совпадать'); pass.Text := 'Введите текущий пароль';  repeat_pass.Text := 'Введите новый пароль'; end
+        if AnsiCompareStr(repeat_pass.text, pass.Text) = 0 then begin showmessage('Пароли не могут совпадать'); pass.PasswordChar := #0; repeat_pass.PasswordChar := #0; pass.Text := 'Введите текущий пароль';  repeat_pass.Text := 'Введите новый пароль'; end
         else
         begin
           db.QueryAuth.SQL.Clear;
@@ -805,9 +807,9 @@ begin
           clicked2 := 0;
         end;
       end
-      else begin showmessage('Текщий пароль введен неверно'); pass.Text := 'Введите текущий пароль ';  repeat_pass.Text := 'Введите новый пароль';  end;
+      else begin showmessage('Текщий пароль введен неверно'); pass.PasswordChar := #0; repeat_pass.PasswordChar := #0; pass.Text := 'Введите текущий пароль ';  repeat_pass.Text := 'Введите новый пароль';  end;
     end
-    else begin showmessage('Пароль доолжен состоять только из латинских символов'); pass.Text := 'Введите текущий пароль';  repeat_pass.Text := 'Введите новый пароль'; end;
+    else begin showmessage('Пароль доолжен состоять только из латинских символов'); pass.PasswordChar := #0; repeat_pass.PasswordChar := #0; pass.Text := 'Введите текущий пароль';  repeat_pass.Text := 'Введите новый пароль'; end;
     clicked2 := 1;
   end;
 end;
@@ -821,13 +823,13 @@ end;
 procedure ThomePage.passField(Sender: TObject);
 begin
   if not AnsiCompareText(pass.Text, 'Введите новый логин') = 0 then pass.Text := pass.Text
-  else pass.Text := '';
+  else begin pass.PasswordChar := #42; pass.Text := '' end;
 end;
 
 procedure ThomePage.repeatPassField(Sender: TObject);
 begin
   if not AnsiCompareText(repeat_pass.Text, 'Введите новый логин') = 0 then repeat_pass.Text := repeat_pass.Text
-  else repeat_pass.Text := '';
+  else begin repeat_pass.PasswordChar := #42; repeat_pass.Text := ''; end;
 end;
 
 procedure ThomePage.user_iconClick(Sender: TObject);

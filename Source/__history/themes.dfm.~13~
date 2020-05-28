@@ -6,6 +6,10 @@ object theme: Ttheme
   ClientHeight = 500
   ClientWidth = 800
   Color = clBtnFace
+  Constraints.MaxHeight = 500
+  Constraints.MaxWidth = 800
+  Constraints.MinHeight = 500
+  Constraints.MinWidth = 800
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -13,6 +17,7 @@ object theme: Ttheme
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  Scaled = False
   OnActivate = FormActivate
   OnPaint = FormPaint
   PixelsPerInch = 96
@@ -205,14 +210,15 @@ object theme: Ttheme
     Left = 315
     Top = 85
     Width = 4
-    Height = 18
+    Height = 21
     Alignment = taCenter
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
     Font.Height = -16
-    Font.Name = 'Arial'
+    Font.Name = 'Century Gothic'
     Font.Style = []
     ParentFont = False
+    Visible = False
   end
   object okey_btn: TImage
     Left = 329
@@ -247,6 +253,7 @@ object theme: Ttheme
       0B8803B88038800B8803B88038800B8803B88038800B8803B8C0F771000F6926
       CE01FAFD452E8FDDBD018E6056D8C2BF00A59BD8013F4FCA2C0000000049454E
       44AE426082}
+    Visible = False
     OnClick = okey_btnClick
   end
   object arrow_left: TImage
@@ -268,6 +275,7 @@ object theme: Ttheme
       CF5A11A702FE4839682535B021E534223199D8240D7020E5542BE137DA8247AD
       88C86839923CD1B937550BA4C464C996BC801F526E222426DB1A89C9464B62B2
       F5938C8FD83D3F392D872CA30000000049454E44AE426082}
+    OnClick = arrow_leftClick
   end
   object arrow_right: TImage
     Left = 772
@@ -324,7 +332,6 @@ object theme: Ttheme
       4801718014100748017180141007480171801410074881FFC701328C3371F6D2
       EF7FE42AC8F46C802D0825B7FA5FBE56D8015DF119BC0000000049454E44AE42
       6082}
-    Visible = False
     OnClick = choose_btnClick
   end
   object close_btn: TImage

@@ -739,7 +739,6 @@ begin
 end;
 
 procedure ThomePage.setting_label4Click(Sender: TObject);
-var clicked:integer;
 begin
   clicked2 := clicked2 + 1;
   if clicked2 = 1 then

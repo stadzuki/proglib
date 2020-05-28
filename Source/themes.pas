@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.pngimage, Vcl.ExtCtrls,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.pngimage, Vcl.ExtCtrls, FireDAC.Stan.Param, Data.DB,
   Vcl.StdCtrls;
 
 type
@@ -105,7 +105,9 @@ end;
 procedure Ttheme.choose_btnClick(Sender: TObject);
 begin
   db.QueryTheme.SQL.Clear;
-  db.QueryTheme.SQL.Add('UPDATE users SET u_theme = '+QuotedStr(inttostr(theme_style))+' WHERE u_login = '+QuotedStr(loginForm.loginField.Text));
+  db.QueryTheme.SQL.Add('UPDATE users SET u_theme = :u_theme WHERE u_login = :u_login');
+  db.QueryTheme.ParamByName('u_theme').AsInteger := theme_style;
+  db.QueryTheme.ParamByName('u_login').AsString := loginForm.loginField.Text;
   db.QueryTheme.Execute;
   homePage.show;
   showLogin.Close;

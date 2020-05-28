@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.pngimage, Vcl.ExtCtrls,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.pngimage, Vcl.ExtCtrls, FireDAC.Stan.Param, Data.DB,
   Vcl.StdCtrls;
 
 type
@@ -105,17 +105,19 @@ end;
 procedure Ttheme.choose_btnClick(Sender: TObject);
 begin
   db.QueryTheme.SQL.Clear;
-  db.QueryTheme.SQL.Add('UPDATE users SET u_theme = '+QuotedStr(inttostr(theme_style))+' WHERE u_login = '+QuotedStr(loginForm.loginField.Text));
+  db.QueryTheme.SQL.Add('UPDATE users SET u_theme = :u_theme WHERE u_login = :u_login');
+  db.QueryTheme.ParamByName('u_theme').AsInteger := theme_style;
+  db.QueryTheme.ParamByName('u_theme').AsString := theme_style;
   db.QueryTheme.Execute;
   homePage.show;
-  showLogin.Hide;
+  showLogin.Close;
   firstEnterprice.Hide;
-  theme.Hide;
+  theme.close;
 end;
 
 procedure Ttheme.close_btnClick(Sender: TObject);
 begin
-  firstEnterprice.Hide;
+  firstEnterprice.hide;
   firstEnterprice.Close;
 end;
 
@@ -123,6 +125,10 @@ procedure Ttheme.FormActivate(Sender: TObject);
 begin
   arrow_left.Enabled := false;
   arrow_right.Enabled := false;
+  close_btn.Visible := false;
+  choose_btn.Visible := false;
+  okey_btn.Visible := true;
+  overlay_text.Visible := true;
   // theme_style = 0 - dark theme, theme_style = 1 - light theme, 2 - green theme, 3 - pink theme, 4 - red theme
   theme_style := 0;
   overlay.Width := 800;

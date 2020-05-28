@@ -19,6 +19,7 @@ object homePage: ThomePage
   Position = poScreenCenter
   Scaled = False
   OnActivate = FormActivate
+  OnClick = FormClick
   OnCreate = FormCreate
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
@@ -628,10 +629,9 @@ object homePage: ThomePage
   object nav_hello: TLabel
     Left = 23
     Top = 71
-    Width = 87
+    Width = 3
     Height = 13
     Cursor = crHandPoint
-    Caption = #1055#1088#1080#1074#1077#1090', st.adzuki'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowFrame
     Font.Height = -11
@@ -963,7 +963,6 @@ object homePage: ThomePage
       6B461FD26E3E3B717F3B2C87AA98621439A7CD236A157C36AF16B58E5405D4C6
       CE33A3CD4B8EF2D0D7D250DD73519DEF40DEDF87FD3871650000000049454E44
       AE426082}
-    Visible = False
     OnClick = admin_settingsClick
   end
   object bg_nav_settings: TImage
@@ -1187,6 +1186,7 @@ object homePage: ThomePage
       CC0951E684287342943921CA9C10654E883227449913A2CC0951E68428734294
       3921CA9C10654E883227449913A2CC0951E684287342943921CA9C10654E88FA
       E7DCB72380D30B24C2DDDD4AC3F9840000000049454E44AE426082}
+    Stretch = True
     Visible = False
   end
   object shut_settings: TImage
@@ -1281,6 +1281,7 @@ object homePage: ThomePage
     Height = 13
     Caption = 'setting_label1'
     Visible = False
+    OnClick = setting_label3Click
   end
   object setting_label4: TLabel
     Left = 272
@@ -1289,5 +1290,6 @@ object homePage: ThomePage
     Height = 13
     Caption = 'setting_label1'
     Visible = False
+    OnClick = setting_label4Click
   end
 end
