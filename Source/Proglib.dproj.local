@@ -23,7 +23,7 @@
     <Transaction>1899.12.30 00:00:00.000.350,E:\proglib\Source\database.dfm=E:\proglib\Source\Unit2.dfm</Transaction>
     <Transaction>1899.12.30 00:00:00.000.279,=E:\proglib\Source\Unit6.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.995,=E:\proglib\Source\Unit6.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.306,E:\proglib\Source\database.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.322,=E:\proglib\Source\database.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.914,=D:\_Project\Desktop-Apps\Proglib.inc\Source\Unit3.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.727,=D:\_Project\Desktop-Apps\Proglib.inc\Source\Unit3.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.062,D:\_Project\Desktop-Apps\Proglib.inc\Source\Unit3.pas=</Transaction>
@@ -37,9 +37,9 @@
     <Transaction>1899.12.30 00:00:00.000.826,E:\proglib\Source\connection.pas=E:\proglib\Source\Unit6.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.909,E:\proglib\Source\enterform.pas=E:\proglib\Source\loginform.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.350,E:\proglib\Source\database.pas=E:\proglib\Source\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.306,E:\proglib\Source\database.pas=</Transaction>
     <Transaction>1899.12.30 00:00:00.000.672,=E:\proglib\Source\database.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.903,E:\proglib\Source\database.pas=</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.322,=E:\proglib\Source\database.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.909,E:\proglib\Source\enterform.dfm=E:\proglib\Source\loginform.dfm</Transaction>
     <Transaction>1899.12.30 00:00:00.000.096,E:\proglib\Source\reg.pas=</Transaction>
     <Transaction>1899.12.30 00:00:00.000.705,E:\proglib\Source\login.dfm=E:\proglib\Source\Unit2.dfm</Transaction>

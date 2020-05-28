@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.pngimage, Vcl.ExtCtrls, FireDAC.Stan.Param, Data.DB,
-  Vcl.StdCtrls;
+  Vcl.StdCtrls, ShellApi;
 
 type
   TcontentPage = class(TForm)
@@ -66,6 +66,7 @@ type
     procedure pRateLeave(Sender: TObject);//Когда курсор покинет видимость рейтинга
     procedure pRateClick(Sender: TObject);//Нажатие на рейтинг
     procedure GoToContent(Sender: TObject);//Возвращает на страницу контента
+    procedure DownloadClick(Sender: TObject);
     procedure LoadPage(var id:integer);//Создание страницы
     procedure LoadRate();//Загрузка рейтинга
   end;
@@ -338,9 +339,23 @@ begin
 end;
 
 procedure TcontentPage.LoadRate();//Создание рейтинга
-var test:string;
+var
 i:integer;
 begin
+
+  db.QueryPage.SQL.Text := 'SELECT * FROM content WHERE id = :id';
+  db.QueryPage.ParamByName('id').AsInteger := PageID;
+  db.QueryPage.Open;
+
+  pRating := TLabel.Create(nil);
+  InsertControl(pRating);
+  pRating.Left := 150;
+  pRating.Top := 228;
+  pRating.Font.Color := RGB(255, 193, 7);
+  pRating.Font.Size := 14;
+  if db.QueryPage['c_rate'] > 0 then pRating.Caption := FloatToStrF(db.QueryPage['c_rate'], ffFixed, 1, 1)
+  else pRating.Caption := '0,0';
+
   db.QueryPage.SQL.Text := 'SELECT * FROM rating WHERE id_page = :id_page AND id_user = :id_user';
   db.QueryPage.ParamByName('id_page').AsInteger := PageID;
   db.QueryPage.ParamByName('id_user').AsInteger := QueryUserID;
@@ -369,18 +384,12 @@ begin
   if db.QueryPage.IsEmpty = false then
   begin
     isRate := true;
-    db.QueryPageInfo.SQL.Text := 'SELECT c_rate FROM content WHERE id = :id';
-    db.QueryPageInfo.ParamByName('id').AsInteger := PageID;
-    db.QueryPageInfo.Open;
-    test := floattostr(db.QueryPageInfo.FieldByName('c_rate').AsFloat);
-    showmessage(test);
-    pRating.Caption := test;
     for i := 1 to 5 do pRate[i].Cursor := crDefault;
-    if db.QueryPage['rateCount'] = 0.2 then for i := 1 to 1 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] = 0.4 then for i := 1 to 2 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] = 0.6 then for i := 1 to 3 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] = 0.8 then for i := 1 to 4 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] = 1.0 then for i := 1 to 5 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] > 0.2 then for i := 1 to 1 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] > 0.4 then for i := 1 to 2 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] > 0.6 then for i := 1 to 3 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] > 0.8 then for i := 1 to 4 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] > 1.0 then for i := 1 to 5 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
   end
   else
   begin
@@ -453,6 +462,7 @@ begin
   pDownload.Top := 230;
   pDownload.Left := 50;
   pDownload.Cursor := crHandPoint;
+  pDownload.OnClick := DownloadClick;
   pDownload.Picture.LoadFromFile('images/download.png');
 
   pRatingImg := TImage.Create(nil);
@@ -462,14 +472,6 @@ begin
   pRatingImg.Left := 133;
   pRatingImg.Top := 235;
   pRatingImg.Picture.LoadFromFile('images/star.png');
-
-  pRating := TLabel.Create(nil);
-  InsertControl(pRating);
-  pRating.Left := 150;
-  pRating.Top := 228;
-  pRating.Caption := '0.0';
-  pRating.Font.Color := RGB(255, 193, 7);
-  pRating.Font.Size := 14;
 
   pTitle := TLabel.Create(nil);
   InsertControl(pTitle);
@@ -530,6 +532,11 @@ begin
   collapse_btn.BringToFront;
 end;
 
+procedure TcontentPage.DownloadClick(Sender: TObject);
+begin
+ ShellExecute(0,'Open',PWideChar(db.QueryPage.FieldByName('c_download').AsString),nil,nil,SW_NORMAL);
+end;
+
 procedure TcontentPage.pRateClick(Sender: TObject);//Нажатие на Rate
 var
   getID:TImage absolute Sender;
@@ -549,7 +556,7 @@ begin
 //    if db.QueryPage['c_rate'] <= 0 then QueryRateCount := RateCount
 //    else QueryRateCount := db.QueryPage['c_rate'] + RateCount;
 
-    RateCount := RateCount + db.QueryPage['c_rate'];
+    RateCount := format('%1.1f', [RateCount]) + db.QueryPage['c_rate'];
 
     db.QueryPage.SQL.Clear;
     db.QueryPage.SQL.Add('INSERT INTO rating (rateCount, id_user, id_page) VALUES (:rateCount, :id_user, :id_page);');
@@ -565,6 +572,7 @@ begin
     db.QueryPage.Execute;
 
     isRateClick := true;
+    pRating.Caption := ' ';
     loadRate();
   end;
 end;
