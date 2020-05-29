@@ -418,10 +418,10 @@ object homePage: ThomePage
   object cheat: TLabel
     Left = 670
     Top = 465
-    Width = 92
+    Width = 103
     Height = 22
     Cursor = crHandPoint
-    Caption = #1064#1087#1072#1088#1075#1072#1083#1082#1080
+    Caption = #1057#1087#1088#1072#1074#1086#1095#1085#1080#1082
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowFrame
     Font.Height = -19

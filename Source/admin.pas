@@ -26,6 +26,8 @@ type
     c_title: TRichEdit;
     c_description: TRichEdit;
     SavePictureDialog1: TSavePictureDialog;
+    typeContent: TComboBox;
+    acthor: TEdit;
     procedure Button8Click(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure src_uploadClick(Sender: TObject);
@@ -33,6 +35,7 @@ type
     procedure c_titleClick(Sender: TObject);
     procedure c_descriptionClick(Sender: TObject);
     procedure linkClick(Sender: TObject);
+    procedure acthorClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -53,14 +56,22 @@ implementation
 
 uses content, database, enter, enterform, login, main, themes;
 
+procedure Tadmin_control.acthorClick(Sender: TObject);
+begin
+  if (length(acthor.Text) > 0 )  AND (not ansicomparetext(acthor.Text, 'Укажите автора') = 0) then acthor.Text := acthor.Text
+  else acthor.Text := '';
+end;
+
 procedure Tadmin_control.Button1Click(Sender: TObject);
 begin
  choose_type.Visible := true;
+ typeContent.Visible := true;
  c_title.Visible := true;
  c_description.Visible := true;
  src_upload.Visible := true;
  link.Visible := true;
  cContent.Visible := true;
+ acthor.Visible := true;
 end;
 
 procedure Tadmin_control.Button8Click(Sender: TObject);
@@ -77,10 +88,14 @@ begin
   if not TRegEx.IsMatch(link.Text, downloadReg) then begin showmessage('Ссылка должна содержать https/http/www протокол. Пример https://site.ru. Проверьте ссылку на правильность.'); exit end;
   //if not TRegEx.IsMatch(test, picha) then begin showmessage('Изображение должно быть только в формать *.png, *.jpg и *.bmp'); exit end;
   if choose_type.ItemIndex = -1 then begin showmessage('Выберите тип контента'); exit end;
+  if typeContent.ItemIndex = -1 then begin showmessage('Выберите подраздел контента'); exit end;
   if (AnsiCompareText(c_title.lines.Text, 'Введите заголовок') = 0) AND (length(c_title.Lines.Text) < 6) then begin showmessage('Заполните или дополните поле заголовка'); exit end;
   if (AnsiCompareText(c_description.lines.Text, 'Введите описание') = 0) AND (length(c_description.Lines.Text) < 6) then begin showmessage('Заполните или дополните поле описания'); exit end;
-  if link_picture.IsEmpty then begin showmessage('Укажите путь к картинке'); exit end;
+  if (AnsiCompareText(acthor.Text, 'Укажите автора') = 0) AND (length(acthor.Text) < 4) then begin showmessage('Укажите автора'); exit end;
+  if link_picture = '' then begin showmessage('Укажите путь к картинке'); exit end;
   if (AnsiCompareText(link.Text, 'Ссылка на скачивание') = 0) AND (length(link.Text) < 6) then begin showmessage('Заполните поле скачивания'); exit end;
+
+
 
   content_type := choose_type.ItemIndex;
   file_name := ExtractFileName( link_picture );
@@ -88,20 +103,29 @@ begin
 //  if not TRegEx.IsMatch(link.Text, url) then begin showmessage('Неверная ссылка'); exit end;
 
   db.QueryContent.SQL.Clear;
-  db.QueryContent.SQL.Add('INSERT INTO content (c_type, c_src, c_title, c_description, c_download) VALUES ('+QuotedStr(inttostr(content_type))+','+QuotedStr(link_picture)+','+QuotedStr(c_title.Lines.Text)+','+QuotedStr(c_description.Text)+','+QuotedStr(link.Text)+');');
+  db.QueryContent.SQL.Add('INSERT INTO content (c_type, c_src, c_title, c_description, c_download, c_athor, c_typeContent) VALUES ( :c_type, :c_src, :c_title, :c_description, :c_download, :c_athor, :c_typeContent);');
+  db.QueryContent.ParamByName('c_type').AsInteger := content_type;
+  db.QueryContent.ParamByName('c_src').AsString := link_picture;
+  db.QueryContent.ParamByName('c_title').AsString := c_title.Lines.Text;
+  db.QueryContent.ParamByName('c_description').AsString := c_description.Text;
+  db.QueryContent.ParamByName('c_download').AsString := link.Text;
+  db.QueryContent.ParamByName('c_athor').AsString := acthor.Text;
+  db.QueryContent.ParamByName('c_typeContent').AsInteger := typeContent.ItemIndex;
   db.QueryContent.Execute;
 
   ShowMessage('Контент добавлен');
 
   //resets
   choose_type.ItemIndex := -1;
+  typeContent.ItemIndex := -1;
   link.Text := 'Ссылка на скачивание';
   c_title.Lines.Text := 'Введите заголовок';
   c_description.Lines.Text := 'Введите описание';
   link_picture := '';
+  acthor.Text := 'Укажите автора';
 
-  admin_control.Hide;
-  
+  admin_control.Close;
+
 end;
 
 procedure Tadmin_control.c_descriptionClick(Sender: TObject);

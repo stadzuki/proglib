@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.pngimage, Vcl.ExtCtrls, FireDAC.Stan.Param, Data.DB,
-  Vcl.StdCtrls;
+  Vcl.StdCtrls, ShellApi;
 
 type
   TcontentPage = class(TForm)
@@ -47,8 +47,9 @@ type
     pContent:TImage;//Книга, видео и т.п. что может быть отображено
     pUserIcon:TImage;//Иконка пользователя на странице
     pUserName:TLabel;//Имя пользоваетля на странице
-    pUserComment:TLabel;//Коментарии
     pAddComment:TMemo;//Добавление коментраия
+    pUserComment:TLabel;//Коментарий
+    pAthorComment:TLabel;//Автор коментария
 
       //Создание всего контента
     bgImg: array of TImage;//Изображение
@@ -66,6 +67,7 @@ type
     procedure pRateLeave(Sender: TObject);//Когда курсор покинет видимость рейтинга
     procedure pRateClick(Sender: TObject);//Нажатие на рейтинг
     procedure GoToContent(Sender: TObject);//Возвращает на страницу контента
+    procedure DownloadClick(Sender: TObject);
     procedure LoadPage(var id:integer);//Создание страницы
     procedure LoadRate();//Загрузка рейтинга
   end;
@@ -248,6 +250,7 @@ begin
         bgImg[i].Top := ImageTop;
         ImageTop := ImageTop + 165;
         bgImg[i].Cursor := crHandPoint;
+        bgImg[i].Stretch := true;
         bgImg[i].tag := db.QueryContent.fieldByname('ID').asinteger;
         bgImg[i].OnClick := bgImgClick;
 
@@ -271,7 +274,7 @@ begin
         titleContent[i].tag := db.QueryContent.fieldByname('ID').asinteger;
         titleContent[i].OnClick := titleContentClick;
 
-        titleContent[i].Caption := db.QueryLoadContent['c_title']+', ';
+        titleContent[i].Caption := db.QueryLoadContent['c_title'];
 
           //Создание подзаголовка
         titleLength := titleContent[i].Width;
@@ -292,9 +295,13 @@ begin
          0: QueryType := 'Книга';
          1: QueryType := 'Справочник';
          2: QueryType := 'Энциклопедия';
+         3: QueryType := 'Программа';
+         4: QueryType := 'Утилита';
+         5: QueryType := 'Текстовый редактор';
+         6: QueryType := 'Библиотека';
         end;
 
-        subContent[i].Caption := QueryType+', автор: ' +db.QueryLoadContent['c_athor'];
+        subContent[i].Caption := ', ' + QueryType+', автор: ' +db.QueryLoadContent['c_athor'];
 
           //Создание описания
         descriptionContent[i]:=TLabel.Create(nil);
@@ -338,9 +345,23 @@ begin
 end;
 
 procedure TcontentPage.LoadRate();//Создание рейтинга
-var test:string;
+var
 i:integer;
 begin
+
+  db.QueryPage.SQL.Text := 'SELECT * FROM content WHERE id = :id';
+  db.QueryPage.ParamByName('id').AsInteger := PageID;
+  db.QueryPage.Open;
+
+  pRating := TLabel.Create(nil);
+  InsertControl(pRating);
+  pRating.Left := 150;
+  pRating.Top := 228;
+  pRating.Font.Color := RGB(255, 193, 7);
+  pRating.Font.Size := 14;
+  if db.QueryPage['c_rate'] > 0 then pRating.Caption := FloatToStrF(db.QueryPage['c_rate'], ffFixed, 1, 1)
+  else pRating.Caption := '0,0';
+
   db.QueryPage.SQL.Text := 'SELECT * FROM rating WHERE id_page = :id_page AND id_user = :id_user';
   db.QueryPage.ParamByName('id_page').AsInteger := PageID;
   db.QueryPage.ParamByName('id_user').AsInteger := QueryUserID;
@@ -372,15 +393,13 @@ begin
     db.QueryPageInfo.SQL.Text := 'SELECT c_rate FROM content WHERE id = :id';
     db.QueryPageInfo.ParamByName('id').AsInteger := PageID;
     db.QueryPageInfo.Open;
-//    test := FloatToStrF(db.QueryPageInfo['c_rate']);
-//    showmessage(test);
     pRating.Caption := FloatToStrF(db.QueryPageInfo['c_rate'], ffFixed, 1, 1);
     for i := 1 to 5 do pRate[i].Cursor := crDefault;
-    if db.QueryPage['rateCount'] = 0.2 then for i := 1 to 1 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] = 0.4 then for i := 1 to 2 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] = 0.6 then for i := 1 to 3 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] = 0.8 then for i := 1 to 4 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] = 1.0 then for i := 1 to 5 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] > 0.2 then for i := 1 to 1 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] > 0.4 then for i := 1 to 2 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] > 0.6 then for i := 1 to 3 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] > 0.8 then for i := 1 to 4 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] > 1.0 then for i := 1 to 5 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
   end
   else
   begin
@@ -425,6 +444,10 @@ begin
      0: QueryType := 'Книга';
      1: QueryType := 'Справочник';
      2: QueryType := 'Энциклопедия';
+     3: QueryType := 'Программа';
+     4: QueryType := 'Утилита';
+     5: QueryType := 'Текстовый редактор';
+     6: QueryType := 'Библиотека';
     end;
 
   pGoBack := TImage.Create(nil);
@@ -453,6 +476,7 @@ begin
   pDownload.Top := 230;
   pDownload.Left := 50;
   pDownload.Cursor := crHandPoint;
+  pDownload.OnClick := DownloadClick;
   pDownload.Picture.LoadFromFile('images/download.png');
 
   pRatingImg := TImage.Create(nil);
@@ -462,14 +486,6 @@ begin
   pRatingImg.Left := 133;
   pRatingImg.Top := 235;
   pRatingImg.Picture.LoadFromFile('images/star.png');
-
-  pRating := TLabel.Create(nil);
-  InsertControl(pRating);
-  pRating.Left := 150;
-  pRating.Top := 228;
-  pRating.Caption := '0.0';
-  pRating.Font.Color := RGB(255, 193, 7);
-  pRating.Font.Size := 14;
 
   pTitle := TLabel.Create(nil);
   InsertControl(pTitle);
@@ -481,7 +497,7 @@ begin
   pTitle.Font.Name := 'Century Gothic';
   pTitle.Font.Size := 12;
   pTitle.Font.Style := [fsBold];
-  pTitle.Caption := db.QueryPage['c_title']+', ';
+  pTitle.Caption := db.QueryPage['c_title'];
 
   pSub := TLabel.Create(nil);
   InsertControl(pSub);
@@ -490,7 +506,7 @@ begin
   pSub.Font.Color := clWindowFrame;
   pSub.Font.Name := 'Century Gothic';
   pSub.Font.Size := 10;
-  pSub.Caption := QueryType + ', автор: '+ db.QueryPage['c_athor'];
+  pSub.Caption := ', '+QueryType + ', автор: '+ db.QueryPage['c_athor'];
 
   pDescription:=TLabel.Create(nil);
   InsertControl(pDescription);
@@ -499,10 +515,23 @@ begin
   pDescription.Font.Color := clWindowFrame;
   pDescription.Font.Size := 14;
   pDescription.Width := 515;
-  pDescription.Height := 175;
+  pDescription.Height := 385;
   pDescription.AutoSize := false;
   pDescription.WordWrap := true;
   pDescription.Caption := db.QueryPage['c_description'];
+
+  pContent:=TImage.Create(nil);
+  InsertControl(pContent);
+  pContent.Height := 0;
+
+  pUserIcon:=TImage.Create(nil);
+  InsertControl(pUserIcon);
+  pUserIcon.Left := 230;
+  pUserIcon.Top := 105 + pDescription.Height + pContent.Height;
+  pUserIcon.Height := 35;
+  pUserIcon.Width := 35;
+  pUserIcon.Picture.LoadFromFile('images/user-dark.png');
+
 
 end;
 
@@ -530,6 +559,11 @@ begin
   collapse_btn.BringToFront;
 end;
 
+procedure TcontentPage.DownloadClick(Sender: TObject);
+begin
+ ShellExecute(0,'Open',PWideChar(db.QueryPage.FieldByName('c_download').AsString),nil,nil,SW_NORMAL);
+end;
+
 procedure TcontentPage.pRateClick(Sender: TObject);//Нажатие на Rate
 var
   getID:TImage absolute Sender;
@@ -549,7 +583,7 @@ begin
 //    if db.QueryPage['c_rate'] <= 0 then QueryRateCount := RateCount
 //    else QueryRateCount := db.QueryPage['c_rate'] + RateCount;
 
-    RateCount := RateCount + db.QueryPage['c_rate'];
+    RateCount := format('%1.1f', [RateCount]) + db.QueryPage['c_rate'];
 
     db.QueryPage.SQL.Clear;
     db.QueryPage.SQL.Add('INSERT INTO rating (rateCount, id_user, id_page) VALUES (:rateCount, :id_user, :id_page);');
@@ -565,6 +599,7 @@ begin
     db.QueryPage.Execute;
 
     isRateClick := true;
+    pRating.Caption := ' ';
     loadRate();
   end;
 end;

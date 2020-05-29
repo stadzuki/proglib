@@ -42,7 +42,7 @@ object admin_control: Tadmin_control
   end
   object choose_type: TComboBox
     Left = 8
-    Top = 48
+    Top = 39
     Width = 145
     Height = 21
     TabOrder = 3
@@ -131,9 +131,9 @@ object admin_control: Tadmin_control
   end
   object c_title: TRichEdit
     Left = 8
-    Top = 75
+    Top = 93
     Width = 145
-    Height = 46
+    Height = 36
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -148,9 +148,9 @@ object admin_control: Tadmin_control
   end
   object c_description: TRichEdit
     Left = 8
-    Top = 127
+    Top = 135
     Width = 145
-    Height = 89
+    Height = 74
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -162,6 +162,33 @@ object admin_control: Tadmin_control
     TabOrder = 14
     Zoom = 100
     OnClick = c_descriptionClick
+  end
+  object typeContent: TComboBox
+    Left = 8
+    Top = 66
+    Width = 145
+    Height = 21
+    TabOrder = 15
+    Text = #1042#1099#1073#1077#1088#1080#1090#1077' '#1087#1086#1076#1088#1072#1079#1076#1077#1083
+    Visible = False
+    Items.Strings = (
+      #1050#1085#1080#1075#1072
+      #1057#1087#1088#1072#1074#1086#1095#1085#1080#1082
+      #1069#1085#1094#1080#1082#1083#1086#1087#1077#1076#1080#1103
+      #1055#1088#1086#1075#1088#1072#1084#1084#1072
+      #1059#1090#1080#1083#1080#1090#1072
+      #1058#1077#1082#1089#1090#1086#1074#1099#1081' '#1088#1077#1076#1072#1082#1090#1086#1088
+      #1041#1080#1073#1083#1080#1086#1090#1077#1082#1072)
+  end
+  object acthor: TEdit
+    Left = 8
+    Top = 215
+    Width = 145
+    Height = 21
+    TabOrder = 16
+    Text = #1059#1082#1072#1078#1080#1090#1077' '#1072#1074#1090#1086#1088#1072
+    Visible = False
+    OnClick = acthorClick
   end
   object upload: TOpenPictureDialog
     Left = 176
