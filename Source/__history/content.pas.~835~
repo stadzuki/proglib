@@ -372,7 +372,7 @@ begin
     db.QueryPageInfo.SQL.Text := 'SELECT c_rate FROM content WHERE id = :id';
     db.QueryPageInfo.ParamByName('id').AsInteger := PageID;
     db.QueryPageInfo.Open;
-    test := floattostr(db.QueryPageInfo.FieldByName('c_rate'));
+    test := floattostr(db.QueryPageInfo.FieldByName('c_rate').AsFloat);
     showmessage(test);
     pRating.Caption := test;
     for i := 1 to 5 do pRate[i].Cursor := crDefault;

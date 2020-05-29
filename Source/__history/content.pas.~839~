@@ -372,7 +372,8 @@ begin
     db.QueryPageInfo.SQL.Text := 'SELECT c_rate FROM content WHERE id = :id';
     db.QueryPageInfo.ParamByName('id').AsInteger := PageID;
     db.QueryPageInfo.Open;
-    test := db.QueryPageInfo.FieldByName('c_rate').AsString;
+    test := FloatToStrF(db.QueryPageInfo['c_rate']);
+    showmessage(test);
     pRating.Caption := test;
     for i := 1 to 5 do pRate[i].Cursor := crDefault;
     if db.QueryPage['rateCount'] = 0.2 then for i := 1 to 1 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
