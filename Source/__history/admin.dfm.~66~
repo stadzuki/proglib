@@ -22,6 +22,7 @@ object admin_control: Tadmin_control
     Height = 25
     Caption = #1044#1086#1073#1072#1074#1080#1090#1100' '#1082#1086#1085#1090#1077#1085#1090
     TabOrder = 0
+    Visible = False
     OnClick = Button1Click
   end
   object Edit1: TEdit

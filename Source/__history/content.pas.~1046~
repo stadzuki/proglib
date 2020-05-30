@@ -144,9 +144,6 @@ begin
   begin
     for i := 1 to db.QueryContent.RecordCount do FreeAndNil(iTitle[i]);
     FreeAndNil(iText);
-    homePage.Show;
-    contentPage.close;
-    exit;
   end;
 
   for i := 1 to db.QueryContent.RecordCount do
@@ -209,7 +206,7 @@ begin
   descTop := 65;
   RateLeft := 50;
   SetLength(posInfo, 4);
-  posInfo[0] := 100;//Отступ слева
+//  posInfo[0] := 70;//Отступ слева
   posInfo[1] := 120;//Отступ сверху
 
   db.QueryPageInfo.SQL.Text := 'SELECT * FROM users WHERE u_login = :u_login';
@@ -267,7 +264,7 @@ begin
 //        end;
         if posInfo[1] >= 465 then//Если пункты достигли низов, то переноосим на другую строчку
         begin
-          posInfo[0] := posInfo[0] + maxLength + 30;
+          posInfo[0] := posInfo[0] + maxLength + 10;
           posInfo[1] := 120;
         end;
         iTitle[i].Left := posInfo[0];
@@ -281,6 +278,7 @@ begin
         iTitle[i].Font.Style := [fsUnderline];
         db.QueryContent.next;
       end;
+
 
       exit;
     end;

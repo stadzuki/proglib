@@ -144,8 +144,6 @@ begin
   begin
     for i := 1 to db.QueryContent.RecordCount do FreeAndNil(iTitle[i]);
     FreeAndNil(iText);
-    homePage.Show;
-    contentPage.close;
     exit;
   end;
 

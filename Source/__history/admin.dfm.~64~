@@ -47,7 +47,6 @@ object admin_control: Tadmin_control
     Height = 21
     TabOrder = 3
     Text = #1042#1099#1073#1077#1088#1080#1090#1077' '#1090#1080#1087' '#1082#1086#1085#1090#1077#1085#1090#1072
-    Visible = False
     Items.Strings = (
       #1050#1085#1080#1075#1072
       #1055#1054
@@ -60,7 +59,6 @@ object admin_control: Tadmin_control
     Height = 25
     Caption = #1059#1082#1072#1078#1080#1090#1077' '#1087#1091#1090#1100' '#1082' '#1092#1086#1090#1086
     TabOrder = 4
-    Visible = False
     OnClick = src_uploadClick
   end
   object link: TEdit
@@ -70,7 +68,6 @@ object admin_control: Tadmin_control
     Height = 21
     TabOrder = 5
     Text = #1057#1089#1099#1083#1082#1072' '#1085#1072' '#1089#1082#1072#1095#1080#1074#1072#1085#1080#1077
-    Visible = False
     OnClick = linkClick
   end
   object Button4: TButton
@@ -129,7 +126,6 @@ object admin_control: Tadmin_control
     Height = 25
     Caption = #1057#1086#1079#1076#1072#1090#1100
     TabOrder = 12
-    Visible = False
     OnClick = cContentClick
   end
   object c_title: TRichEdit
@@ -146,7 +142,6 @@ object admin_control: Tadmin_control
       #1042#1074#1077#1076#1080#1090#1077' '#1079#1072#1075#1086#1083#1086#1074#1086#1082)
     ParentFont = False
     TabOrder = 13
-    Visible = False
     Zoom = 100
     OnClick = c_titleClick
   end
@@ -164,7 +159,6 @@ object admin_control: Tadmin_control
       #1042#1074#1077#1076#1080#1090#1077' '#1086#1087#1080#1089#1072#1085#1080#1077)
     ParentFont = False
     TabOrder = 14
-    Visible = False
     Zoom = 100
     OnClick = c_descriptionClick
   end
@@ -175,7 +169,6 @@ object admin_control: Tadmin_control
     Height = 21
     TabOrder = 15
     Text = #1042#1099#1073#1077#1088#1080#1090#1077' '#1087#1086#1076#1088#1072#1079#1076#1077#1083
-    Visible = False
     Items.Strings = (
       #1050#1085#1080#1075#1072
       #1057#1087#1088#1072#1074#1086#1095#1085#1080#1082
@@ -192,7 +185,6 @@ object admin_control: Tadmin_control
     Height = 21
     TabOrder = 16
     Text = #1059#1082#1072#1078#1080#1090#1077' '#1072#1074#1090#1086#1088#1072
-    Visible = False
     OnClick = acthorClick
   end
   object addInfo: TButton
