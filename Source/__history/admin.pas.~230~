@@ -42,6 +42,8 @@ type
     procedure c_descriptionClick(Sender: TObject);
     procedure linkClick(Sender: TObject);
     procedure acthorClick(Sender: TObject);
+  protected
+    procedure CreateParams(var Params: TCreateParams) ; override;
   private
     { Private declarations }
   public
@@ -61,6 +63,13 @@ implementation
 {$R *.dfm}
 
 uses content, database, enter, enterform, login, main, themes;
+
+procedure Tadmin_control.CreateParams(var Params: TCreateParams);//Создание иконки на панели задачь
+begin
+  inherited;
+  Params.ExStyle := Params.ExStyle or WS_EX_APPWINDOW;
+  Params.WndParent := 0;
+end;
 
 procedure Tadmin_control.acthorClick(Sender: TObject);
 begin
@@ -90,13 +99,13 @@ end;
 procedure Tadmin_control.iCreateClick(Sender: TObject);
 begin
   if (iTitle.Text = '') or (iTitle.Text = 'Укажите тег') then begin showmessage('Укажите тег'); iTitle.Text := 'Укажите тег'; exit; end;
-  if (iDesc.Lines.Text = '') or (iDesc.Lines.Text = 'Укажите описание тега') then begin showmessage('Укажиье описание тега'); iDesc.Lines.Text = 'Укажите описание тега'; exit; end;
+  if (iDesc.Lines.Text = '') or (iDesc.Lines.Text = 'Укажите описание тега') then begin showmessage('Укажите описание тега'); iDesc.Lines.Text := 'Укажите описание тега'; exit; end;
 
   db.QueryContent.SQL.Clear;
   db.QueryContent.SQL.Add('INSERT INTO content (c_type, c_title, c_description) VALUES ( :c_type, :c_title, :c_description);');
-  db.QueryContent.ParamByName('c_type').AsInteger := '3';
-  db.QueryContent.ParamByName('c_title').AsString := c_title.Lines.Text;
-  db.QueryContent.ParamByName('c_description').AsString := c_description.Text;
+  db.QueryContent.ParamByName('c_type').AsInteger := 3;
+  db.QueryContent.ParamByName('c_title').AsString := iTitle.Text;
+  db.QueryContent.ParamByName('c_description').AsString := iDesc.Text;
   db.QueryContent.Execute;
 
   ShowMessage('Контент добавлен');

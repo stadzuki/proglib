@@ -62,4 +62,9 @@ object db: Tdb
     Left = 88
     Top = 136
   end
+  object QuerySort: TFDQuery
+    Connection = FDConnection1
+    Left = 168
+    Top = 136
+  end
 end

@@ -78,10 +78,11 @@ begin
   showLogin.Enabled:=true;
   login_subtitle.Visible:=true;
   reg_btn.Visible:=true;
-  loginForm.Hide;
+  loginForm.close;
 end;
 
 procedure TloginForm.enter_btnClick(Sender: TObject);
+var check_ban:integer;
 begin
   if (AnsiCompareStr(loginField.Text, 'Введите логин') = 0) AND (AnsiCompareStr(passwordField.Text, 'Введите пароль') = 0) then
   begin
@@ -102,10 +103,10 @@ begin
           db.QueryReg.Execute;
         finally // скрываем форму показываем выбор темы
           db.QueryReg.Free;
-          showLogin.hide;
+          showLogin.close;
           RegState:=false;
           theme.Show;
-          loginForm.Hide;
+          loginForm.close;
         end;
       end
       else showmessage('Поля должны состоять из латинских символов длинной не менее 4-х символов и не более 24-х');
@@ -125,23 +126,25 @@ begin
       if db.QueryAuth['u_theme'] = -1 then
       begin // если темы нет покажем выбор темы
         showLogin.Enabled := true;
-        showLogin.Hide;
+        showLogin.close;
         theme.Show;
-        loginForm.Hide;
+        loginForm.close;
       end
       else
       begin      // Если все верно и тема выбрана показываем главную страницу
-        if not db.QueryAuth['u_ban'] = 0 then
+        check_ban := db.QueryAuth['u_ban'];
+        if  check_ban > 0 then
         begin
-          showmessage('Ваш аккаунт заблокирован на '+db.QueryAuth['u_ban']+' д.');
+          showmessage('Ваш аккаунт заблокирован на '+inttostr(check_ban)+' д.');
+          exit;
         end;
         db.QueryAuth.SQL.Clear;
         db.QueryAuth.SQL.Add('UPDATE users SET u_lastEnter = '+QuotedStr(last_date)+', u_ipEnter = '+QuotedStr(GetLocalIP)+' WHERE u_login = '+QuotedStr(loginForm.loginField.Text));
         db.QueryAuth.Execute;
         homePage.show;
-        showLogin.hide;
+        showLogin.close;
         firstEnterprice.Hide;
-        loginForm.Hide;
+        loginForm.close;
       end;
     end
     else showmessage('Логин или пароль указан неверно!');

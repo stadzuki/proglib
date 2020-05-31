@@ -22,6 +22,7 @@ type
     QueryLoadContent: TFDQuery;
     QueryPage: TFDQuery;
     QueryPageInfo: TFDQuery;
+    QuerySort: TFDQuery;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }

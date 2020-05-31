@@ -15,9 +15,13 @@ type
   Tdb = class(TForm)
     FDConnection1: TFDConnection;
     QueryReg: TFDQuery;
-    FDPhysMySQLDriverLink1: TFDPhysMySQLDriverLink;
     QueryTheme: TFDQuery;
     QueryAuth: TFDQuery;
+    QueryAdmin: TFDQuery;
+    QueryContent: TFDQuery;
+    QueryLoadContent: TFDQuery;
+    QueryPage: TFDQuery;
+    QueryPageInfo: TFDQuery;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }

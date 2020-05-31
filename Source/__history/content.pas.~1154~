@@ -144,6 +144,9 @@ begin
   begin
     for i := 1 to db.QueryContent.RecordCount do FreeAndNil(iTitle[i]);
     FreeAndNil(iText);
+    homePage.Show;
+    contentPage.close;
+    exit;
   end;
 
   for i := 1 to db.QueryContent.RecordCount do
@@ -190,6 +193,7 @@ end;
 
 procedure TcontentPage.FormActivate(Sender: TObject);
 var i, titleLength, maxLength: integer;
+key, old_key: string;
 begin
   isPage := false;
   isRate := false;
@@ -206,7 +210,7 @@ begin
   descTop := 65;
   RateLeft := 50;
   SetLength(posInfo, 4);
-  posInfo[0] := 0;//Отступ слева
+  posInfo[0] := 70;//Отступ слева
   posInfo[1] := 120;//Отступ сверху
 
   db.QueryPageInfo.SQL.Text := 'SELECT * FROM users WHERE u_login = :u_login';
@@ -241,6 +245,19 @@ begin
   if db.QueryContent.IsEmpty = false then
   begin
 
+     //Создание скролла
+      QueryCount:=db.QueryContent.RecordCount;
+      getContentHeight(QueryCount);
+      if QueryCount > 3 then
+      begin
+        contentScroll.Visible := true;
+        for i := 4 to QueryCount do
+        begin
+          if contentScroll.Height <= 20 then break;
+          contentScroll.Height := contentScroll.Height - 97;
+        end;
+      end;
+
         //Контент для справочника
     if db.QueryContent['c_type'] = 3 then
     begin
@@ -251,35 +268,34 @@ begin
       iText.Caption := 'Справочник';
       iText.Font.Color := clWindowFrame;
       iText.Font.Size := 16;
+      iText.Caption := 'Справочник  ';
 
-      SetLength(iTitle, db.QueryContent.RecordCount + 1);
-      for i := 1 to db.QueryContent.RecordCount do
+      SetLength(iTitle, 4);
+      while not db.QueryContent.Eof do
       begin
         iTitle[i] := TLabel.Create(nil);
         InsertControl(iTitle[i]);
-//        if posInfo[0] >= 800 then
-//        begin
-//          posInfo[1] := posInfo[1] + 30;
-//          posInfo[0] := 100;
-//        end;
-        if posInfo[1] >= 465 then//Если пункты достигли низов, то переноосим на другую строчку
+
+        key := db.QueryContent['c_title'];
+        if posInfo[0] > 660 then
         begin
-          posInfo[0] := posInfo[0] + maxLength + 10;
-          posInfo[1] := 120;
+          posInfo[0] := 70;
+          posInfo[1] := posInfo[1] + maxLength;
+          maxLength := 0;
         end;
-        iTitle[i].Left := posInfo[0] + 70;
+        posInfo[0] := posInfo[0] + maxLength + 30;
+        iTitle[i].Left := posInfo[0];
         iTitle[i].Top := posInfo[1];
-        posInfo[1] := posInfo[1] + 30;
-        iTitle[i].Caption := ' ';
         iTitle[i].Caption := db.QueryContent['c_title'];
+        if iTitle[i].Caption[1] < iTitle[i] then showmessage('++');
+
         iTitle[i].Font.Size := 12;
         if maxLength < iTitle[i].Width then maxLength := iTitle[i].Width;
         iTitle[i].Font.Color := clHotLight;
         iTitle[i].Font.Style := [fsUnderline];
+        old_key := key[1];
         db.QueryContent.next;
       end;
-
-
       exit;
     end;
 
@@ -289,7 +305,8 @@ begin
       SetLength(titleContent, db.QueryContent.RecordCount + 1);
       SetLength(subContent, db.QueryContent.RecordCount + 1);
       SetLength(descriptionContent, db.QueryContent.RecordCount + 1);
-      for i := 1 to db.QueryContent.RecordCount do
+//      for i := 1 to db.QueryContent.RecordCount do
+      while not db.QueryContent.Eof do
       begin
 
           //Создание заднего фона
@@ -391,19 +408,6 @@ begin
         был хоть какой-нибудь контент если проблемы с бд или с сервером }
 
         db.QueryContent.next;
-      end;
-
-        //Создание скролла
-      QueryCount:=db.QueryContent.RecordCount;
-      getContentHeight(QueryCount);
-      if QueryCount > 3 then
-      begin
-        contentScroll.Visible := true;
-        for i := 4 to QueryCount do
-        begin
-          if contentScroll.Height <= 20 then break;
-          contentScroll.Height := contentScroll.Height - 97;
-        end;
       end;
 
   end;
@@ -785,12 +789,14 @@ begin
   begin
     if scrollResult < heightResult then
     begin
-      ScrollBy(0, -10);
+      ScrollBy(0,-10);
       shutdown_btn.Top := shutdown_btn.Top + 10;
       collapse_btn.Top := collapse_btn.Top + 10;
       arrow_btn.Top := arrow_btn.Top + 10;
       scrollResult := scrollResult + 10;
       contentScroll.Top := contentScroll.Top + 15;
+      iAdminBtn.Top := iAdminBtn.Top + 10;
+      iAdmin.Top := iAdminBtn.Top + 3;
     end;
   end;
 end;
@@ -806,6 +812,8 @@ begin
       arrow_btn.Top := arrow_btn.Top - 10;
       scrollResult := scrollResult - 10;
       contentScroll.Top := contentScroll.Top - 15;
+      iAdminBtn.Top := iAdminBtn.Top - 10;
+      iAdmin.Top := iAdminBtn.Top - 3;
   end;
 end;
   //</mouseLogic>
