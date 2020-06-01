@@ -193,7 +193,6 @@ end;
 
 procedure TcontentPage.FormActivate(Sender: TObject);
 var i, titleLength, maxLength: integer;
-key, old_key: string;
 begin
   isPage := false;
   isRate := false;
@@ -275,8 +274,6 @@ begin
       begin
         iTitle[i] := TLabel.Create(nil);
         InsertControl(iTitle[i]);
-
-        key := db.QueryContent['c_title'];
         if posInfo[0] > 660 then
         begin
           posInfo[0] := 70;
@@ -287,12 +284,10 @@ begin
         iTitle[i].Left := posInfo[0];
         iTitle[i].Top := posInfo[1];
         iTitle[i].Caption := db.QueryContent['c_title'];
-        if 'b' > 'a' then showmessage('++');
         iTitle[i].Font.Size := 12;
         if maxLength < iTitle[i].Width then maxLength := iTitle[i].Width;
         iTitle[i].Font.Color := clHotLight;
         iTitle[i].Font.Style := [fsUnderline];
-        old_key := key[1];
         db.QueryContent.next;
       end;
       exit;
@@ -489,7 +484,9 @@ begin
   shutdown_btn.BringToFront;
   collapse_btn.BringToFront;
 
-  for i := 1 to db.QueryContent.RecordCount do
+//  for i := 1 to db.QueryContent.EOF do
+  while not db.QueryContent.Eof do
+  
   begin
     FreeAndNil(bgContent[i]);
     FreeAndNil(bgImg[i]);

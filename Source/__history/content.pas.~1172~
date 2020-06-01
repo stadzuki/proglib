@@ -193,7 +193,6 @@ end;
 
 procedure TcontentPage.FormActivate(Sender: TObject);
 var i, titleLength, maxLength: integer;
-key, old_key: string;
 begin
   isPage := false;
   isRate := false;
@@ -271,12 +270,11 @@ begin
       iText.Caption := 'Справочник  ';
 
       SetLength(iTitle, 4);
+      i:=1;
       while not db.QueryContent.Eof do
       begin
         iTitle[i] := TLabel.Create(nil);
         InsertControl(iTitle[i]);
-
-        key := db.QueryContent['c_title'];
         if posInfo[0] > 660 then
         begin
           posInfo[0] := 70;
@@ -287,13 +285,11 @@ begin
         iTitle[i].Left := posInfo[0];
         iTitle[i].Top := posInfo[1];
         iTitle[i].Caption := db.QueryContent['c_title'];
-        if key[1] > then showmessage('++');
-
         iTitle[i].Font.Size := 12;
         if maxLength < iTitle[i].Width then maxLength := iTitle[i].Width;
         iTitle[i].Font.Color := clHotLight;
         iTitle[i].Font.Style := [fsUnderline];
-        old_key := key[1];
+        inc(i);
         db.QueryContent.next;
       end;
       exit;
@@ -305,10 +301,10 @@ begin
       SetLength(titleContent, db.QueryContent.RecordCount + 1);
       SetLength(subContent, db.QueryContent.RecordCount + 1);
       SetLength(descriptionContent, db.QueryContent.RecordCount + 1);
+      i:=1;
 //      for i := 1 to db.QueryContent.RecordCount do
       while not db.QueryContent.Eof do
       begin
-
           //Создание заднего фона
         bgContent[i]:=TImage.Create(nil);
         InsertControl(bgContent[i]);
@@ -406,7 +402,7 @@ begin
 
         bgContent[i].Picture.LoadFromFile('images/bg_element.png'); { Само изображение подгружаем в самом конце для того чтобы
         был хоть какой-нибудь контент если проблемы с бд или с сервером }
-
+        inc(i);
         db.QueryContent.next;
       end;
 
@@ -489,14 +485,17 @@ begin
   arrow_btn.Visible := false;
   shutdown_btn.BringToFront;
   collapse_btn.BringToFront;
+  i:=1;
 
-  for i := 1 to db.QueryContent.RecordCount do
+  for i := 1 to not  db.QueryContent.EOF do
+//  while not db.QueryContent.Eof do
   begin
     FreeAndNil(bgContent[i]);
     FreeAndNil(bgImg[i]);
     FreeAndNil(titleContent[i]);
     FreeAndNil(subContent[i]);
     FreeAndNil(descriptionContent[i]);
+    inc(i);
   end;
 
   isPage := true;
