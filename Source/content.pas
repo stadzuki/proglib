@@ -590,7 +590,7 @@ begin
   pUserIcon:=TImage.Create(nil);
   InsertControl(pUserIcon);
   pUserIcon.Left := 230;
-  pUserIcon.Top := 105 + pDescription.Height + pContent.Height;
+  pUserIcon.Top := pDescription.Height + pContent.Height;
   pUserIcon.Height := 35;
   pUserIcon.Width := 35;
   pUserIcon.Picture.LoadFromFile('images/user-dark.png');
