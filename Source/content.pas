@@ -45,11 +45,10 @@ type
     pSub:TLabel;//Подзаголовок
     pDescription:TLabel;//Описание
     pContent:TImage;//Книга, видео и т.п. что может быть отображено
-    pUserIcon:TImage;//Иконка пользователя на странице
-    pUserName:TLabel;//Имя пользоваетля на странице
+    pUserIcon: array of TImage;//Иконка пользователя на странице
+    pUserName: array of TLabel;//Имя пользоваетля на странице
     pAddComment:TMemo;//Добавление коментраия
-    pUserComment:TLabel;//Коментарий
-    pAthorComment:TLabel;//Автор коментария
+    pUserComment: array of TLabel;//Коментарий
 
       //Создание справочника
     iTitle: array of TLabel;
@@ -80,6 +79,7 @@ type
     procedure iAdminClick(Sender: TObject);
     procedure LoadPage(var id:integer);//Создание страницы
     procedure LoadRate();//Загрузка рейтинга
+    procedure LoadComment();
   end;
 
 var
@@ -103,7 +103,8 @@ var
   TitleTop,//Отступ сверху для заголовка
   subTop,//Отступ сверху для подзаголовка
   descTop,//Отступ сверху для описания (desc - description)
-  QueryTypeContent//Описание контента
+  QueryTypeContent,//Описание контента
+  posComment
   :integer;
 
   isPage,//Если страница открыта
@@ -270,6 +271,7 @@ begin
       iText.Caption := 'Справочник  ';
 
       SetLength(iTitle, 4);
+      i:=1;
       while not db.QueryContent.Eof do
       begin
         iTitle[i] := TLabel.Create(nil);
@@ -288,6 +290,7 @@ begin
         if maxLength < iTitle[i].Width then maxLength := iTitle[i].Width;
         iTitle[i].Font.Color := clHotLight;
         iTitle[i].Font.Style := [fsUnderline];
+        inc(i);
         db.QueryContent.next;
       end;
       exit;
@@ -299,10 +302,10 @@ begin
       SetLength(titleContent, db.QueryContent.RecordCount + 1);
       SetLength(subContent, db.QueryContent.RecordCount + 1);
       SetLength(descriptionContent, db.QueryContent.RecordCount + 1);
+      i:=1;
 //      for i := 1 to db.QueryContent.RecordCount do
       while not db.QueryContent.Eof do
       begin
-
           //Создание заднего фона
         bgContent[i]:=TImage.Create(nil);
         InsertControl(bgContent[i]);
@@ -400,7 +403,7 @@ begin
 
         bgContent[i].Picture.LoadFromFile('images/bg_element.png'); { Само изображение подгружаем в самом конце для того чтобы
         был хоть какой-нибудь контент если проблемы с бд или с сервером }
-
+        inc(i);
         db.QueryContent.next;
       end;
 
@@ -477,7 +480,8 @@ begin
 end;
 
 procedure TcontentPage.LoadPage(var id:integer);//Загрузка страницы
-var i:integer;
+var i, resultMath:integer;
+math:real;
 begin
   PageID := id;
   arrow_btn.Visible := false;
@@ -491,6 +495,7 @@ begin
     FreeAndNil(titleContent[i]);
     FreeAndNil(subContent[i]);
     FreeAndNil(descriptionContent[i]);
+    db.QueryContent.Next;
   end;
 
   isPage := true;
@@ -577,25 +582,101 @@ begin
   pDescription.Top := 105;
   pDescription.Font.Color := clWindowFrame;
   pDescription.Font.Size := 14;
+  pDescription.Caption := db.QueryPage['c_description'];
   pDescription.Width := 515;
-  pDescription.Height := 385;
+  math := (length(pDescription.Caption)+515+25)/5;
+  resultMath := trunc(math);
+  pDescription.Height := resultMath;
   pDescription.AutoSize := false;
   pDescription.WordWrap := true;
-  pDescription.Caption := db.QueryPage['c_description'];
 
   pContent:=TImage.Create(nil);
   InsertControl(pContent);
   pContent.Height := 0;
 
-  pUserIcon:=TImage.Create(nil);
-  InsertControl(pUserIcon);
-  pUserIcon.Left := 230;
-  pUserIcon.Top := pDescription.Height + pContent.Height;
-  pUserIcon.Height := 35;
-  pUserIcon.Width := 35;
-  pUserIcon.Picture.LoadFromFile('images/user-dark.png');
 
+  posComment := 105 + 50 + pDescription.Height + pContent.Height;
+  LoadComment();
 
+end;
+
+procedure TcontentPage.LoadComment();
+var math:real;
+sender, i, resultMath:integer;
+begin
+  db.QueryPage.SQL.Text := 'SELECT * FROM comment WHERE id_page = :id_page ORDER BY id DESC';
+  db.QueryPage.ParamByName('id_page').AsInteger := PageID;
+  db.QueryPage.Open;
+
+  if not db.QueryPage.IsEmpty then
+  begin
+    SetLength(pUserComment, db.QueryPage.RecordCount + 1);
+    SetLength(pUserName, db.QueryPage.RecordCount + 1);
+    SetLength(pUserIcon, db.QueryPage.RecordCount + 1);
+    
+  
+    pUserIcon[0] := TImage.Create(nil);
+    InsertControl(pUserIcon[0]);
+    pUserIcon[0].Left := 230;
+    pUserIcon[0].Top := posComment;
+    pUserIcon[0].Height := 35;
+    pUserIcon[0].Width := 35;
+    pUserIcon[0].Picture.LoadFromFile('images/user-dark.png');
+    
+  
+    pAddComment := TMemo.Create(nil);
+    InsertControl(pAddComment);
+    pAddComment.Left := 275;
+    pAddComment.TextHint := 'Прокоментировать';
+    pAddComment.Top := posComment;
+    pAddComment.Height := 35;
+    pAddComment.Width := 250;
+    
+    for i := 1 to db.QueryPage.RecordCount do
+    begin
+      posComment := posComment + 75;
+      sender := db.QueryPage['id_sender'];
+      db.QueryPageInfo.SQL.Text := 'SELECT * FROM users WHERE id = :id';
+      db.QueryPageInfo.ParamByName('id').AsInteger := sender;
+      db.QueryPageInfo.Open;
+      
+      pUserIcon[i]:=TImage.Create(nil);
+      InsertControl(pUserIcon[i]);
+      pUserIcon[i].Left := 230;
+      pUserIcon[i].Top := posComment;
+      pUserIcon[i].Height := 35;
+      pUserIcon[i].Width := 35;
+      pUserIcon[i].Picture.LoadFromFile('images/user-dark.png');
+
+      pUserName[i]:=TLabel.Create(nil);
+      InsertControl(pUserName[i]);
+      pUserName[i].Left := 230 + 45;
+      pUserName[i].Top := posComment;
+      if loginForm.loginField.Text = db.QueryPageInfo['u_login'] then
+      pUserName[i].Caption := 'Вы:' 
+      else pUserName[i].Caption := db.QueryPageInfo['u_login'];
+      pUserName[i].Font.Style := [fsBold];
+      pUserName[i].Font.Color := clWindowFrame;
+      pUserName[i].Font.Size := 10;
+  
+      pUserComment[i]:=TLabel.Create(nil);
+      InsertControl(pUserComment[i]);
+      pUserComment[i].Left := 230 + 45;
+      pUserComment[i].Top := posComment + 18;      
+      pUserComment[i].Caption := db.QueryPage['comment'];
+      pUserComment[i].Font.Size := 10;
+      pUserComment[i].Font.Color := clWindowFrame;
+      pUserComment[i].Width := 300;
+      math := (length(pUserComment[i].Caption)+240)/5;
+      resultMath := trunc(math);
+      pUserComment[i].Height := resultMath;
+      pUserComment[i].AutoSize := false;
+      pUserComment[i].WordWrap := true;
+      
+      db.QueryPage.Next;
+      db.QueryPageInfo.Next;
+    end;
+  end;
 end;
 
 procedure TcontentPage.GoToContent(Sender: TObject);//Возвращение к контенту
