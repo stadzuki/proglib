@@ -49,6 +49,13 @@ type
     pUserName: array of TLabel;//Имя пользоваетля на странице
     pAddComment:TMemo;//Добавление коментраия
     pUserComment: array of TLabel;//Коментарий
+    pSendComment: TImage;
+    pLikeComment: array of TImage;
+    pLikeCount: array of TLabel;
+    pDislikeComment: array of TImage;
+    pDislikeCount: array of TLabel;
+    pDateComment: array of TLabel;
+
 
       //Создание справочника
     iTitle: array of TLabel;
@@ -77,6 +84,8 @@ type
     procedure GoToContent(Sender: TObject);//Возвращает на страницу контента
     procedure DownloadClick(Sender: TObject);
     procedure iAdminClick(Sender: TObject);
+    procedure SendClick(Sender: TObject);
+    procedure LikeClick(Sender: TObject);
     procedure LoadPage(var id:integer);//Создание страницы
     procedure LoadRate();//Загрузка рейтинга
     procedure LoadComment();
@@ -125,14 +134,14 @@ begin
   Params.WndParent := 0;
 end;
 
-procedure getContentHeight(var count:integer);//Получение высоты контента
+procedure getContentHeight(var count:integer; cH:integer);//Получение высоты контента
 var cHeight, i:integer;
 begin
   cHeight := 465;
   if count > 3 then
     for i := 4 to count do
     begin
-      cHeight := cHeight + 165;
+      cHeight := cHeight + cH;//
       heightResult := cHeight;
     end
   else heightResult := 465;
@@ -247,7 +256,7 @@ begin
 
      //Создание скролла
       QueryCount:=db.QueryContent.RecordCount;
-      getContentHeight(QueryCount);
+      getContentHeight(QueryCount, 165);
       if QueryCount > 3 then
       begin
         contentScroll.Visible := true;
@@ -483,6 +492,9 @@ procedure TcontentPage.LoadPage(var id:integer);//Загрузка страницы
 var i, resultMath:integer;
 math:real;
 begin
+//  FreeAndNil(iAdmin);
+//  FreeAndNil(iAdminBtn);
+
   PageID := id;
   arrow_btn.Visible := false;
   shutdown_btn.BringToFront;
@@ -602,45 +614,67 @@ end;
 
 procedure TcontentPage.LoadComment();
 var math:real;
-sender, i, resultMath:integer;
+sender, i, resultMath, qID:integer;
 begin
+
   db.QueryPage.SQL.Text := 'SELECT * FROM comment WHERE id_page = :id_page ORDER BY id DESC';
   db.QueryPage.ParamByName('id_page').AsInteger := PageID;
   db.QueryPage.Open;
+
+  SetLength(pUserIcon, db.QueryPage.RecordCount + 1);
+
+  pUserIcon[0] := TImage.Create(self);
+  InsertControl(pUserIcon[0]);
+  pUserIcon[0].Left := 230;
+  pUserIcon[0].Top := posComment;
+  pUserIcon[0].Height := 35;
+  pUserIcon[0].Width := 35;
+  pUserIcon[0].Picture.LoadFromFile('images/user-dark.png');
+
+
+  pAddComment := TMemo.Create(self);
+  InsertControl(pAddComment);
+  pAddComment.Left := 295;
+  pAddComment.Lines.Text:='Прокомментировать';
+  pAddComment.Font.Color := clWindowFrame;
+  pAddComment.Top := posComment;
+  pAddComment.Height := 35;
+  pAddComment.Width := 250;
+
+  pSendComment := TImage.Create(self);
+  InsertControl(pSendComment);
+  pSendComment.left := pAddComment.Left + 30 + 250;
+  pSendComment.Top := posComment + 6;
+  pSendComment.Width := 35;
+  pSendComment.Height := 35;
+  pSendComment.Cursor := crHandPoint;
+  pSendComment.Picture.LoadFromFile('images/send.png');
+  pSendComment.OnClick := SendClick;
 
   if not db.QueryPage.IsEmpty then
   begin
     SetLength(pUserComment, db.QueryPage.RecordCount + 1);
     SetLength(pUserName, db.QueryPage.RecordCount + 1);
-    SetLength(pUserIcon, db.QueryPage.RecordCount + 1);
-    
-  
-    pUserIcon[0] := TImage.Create(nil);
-    InsertControl(pUserIcon[0]);
-    pUserIcon[0].Left := 230;
-    pUserIcon[0].Top := posComment;
-    pUserIcon[0].Height := 35;
-    pUserIcon[0].Width := 35;
-    pUserIcon[0].Picture.LoadFromFile('images/user-dark.png');
-    
-  
-    pAddComment := TMemo.Create(nil);
-    InsertControl(pAddComment);
-    pAddComment.Left := 275;
-    pAddComment.TextHint := 'Прокоментировать';
-    pAddComment.Top := posComment;
-    pAddComment.Height := 35;
-    pAddComment.Width := 250;
-    
+    SetLength(pLikeComment, db.QueryPage.RecordCount + 1);
+    SetLength(pLikeCount, db.QueryPage.RecordCount + 1);
+    SetLength(pDislikeComment, db.QueryPage.RecordCount + 1);
+    SetLength(pDislikeCount, db.QueryPage.RecordCount + 1);
+
     for i := 1 to db.QueryPage.RecordCount do
     begin
       posComment := posComment + 75;
+
+      db.QueryInsertComment.SQL.Text := 'SELECT * FROM comment WHERE id_page = :id_page';
+      db.QueryInsertComment.ParamByName('id_page').AsInteger := PageID;
+      db.QueryInsertComment.Open;
+      qID := db.QueryPage['id'];
+
       sender := db.QueryPage['id_sender'];
       db.QueryPageInfo.SQL.Text := 'SELECT * FROM users WHERE id = :id';
       db.QueryPageInfo.ParamByName('id').AsInteger := sender;
       db.QueryPageInfo.Open;
       
-      pUserIcon[i]:=TImage.Create(nil);
+      pUserIcon[i]:=TImage.Create(self);
       InsertControl(pUserIcon[i]);
       pUserIcon[i].Left := 230;
       pUserIcon[i].Top := posComment;
@@ -648,7 +682,7 @@ begin
       pUserIcon[i].Width := 35;
       pUserIcon[i].Picture.LoadFromFile('images/user-dark.png');
 
-      pUserName[i]:=TLabel.Create(nil);
+      pUserName[i]:=TLabel.Create(self);
       InsertControl(pUserName[i]);
       pUserName[i].Left := 230 + 45;
       pUserName[i].Top := posComment;
@@ -659,7 +693,7 @@ begin
       pUserName[i].Font.Color := clWindowFrame;
       pUserName[i].Font.Size := 10;
   
-      pUserComment[i]:=TLabel.Create(nil);
+      pUserComment[i]:=TLabel.Create(self);
       InsertControl(pUserComment[i]);
       pUserComment[i].Left := 230 + 45;
       pUserComment[i].Top := posComment + 18;      
@@ -672,11 +706,149 @@ begin
       pUserComment[i].Height := resultMath;
       pUserComment[i].AutoSize := false;
       pUserComment[i].WordWrap := true;
-      
+
+      pLikeCount[i] := TLabel.Create(self);
+      InsertControl(pLikeCount[i]);
+      pLikeCount[i].Left := 230 + 45;
+      pLikeCount[i].Top := pUserComment[i].Top + 14 + 9;
+      pLikeCount[i].Font.Color := clWindowFrame;
+      pLikeCount[i].Font.Size := 10;
+      pLikeCount[i].Font.Name := 'Arial';
+      pLikeCount[i].Caption := db.QueryPage['liked'];
+
+      pLikeComment[i] := TImage.Create(self);
+      InsertControl(pLikeComment[i]);
+      pLikeComment[i].Width := 16;
+      pLikeComment[i].Height := 16;
+      pLikeComment[i].Top := pUserComment[i].Top + 12 + 10;
+      pLikeComment[i].Left := 230 + 50 + 6;
+      pLikeComment[i].Cursor := crHandPoint;
+      pLikeComment[i].Tag := qID;
+      pLikeComment[i].OnClick := LikeClick;
+      if db.QueryPage['rated'] = 0 then pLikeComment[i].Picture.LoadFromFile('images/like.png');
+      if db.QueryPage['rated'] = 1 then pLikeComment[i].Picture.LoadFromFile('images/like-enabled.png');
+
+      pDislikeCount[i] := TLabel.Create(self);
+      InsertControl(pDislikeCount[i]);
+      pDislikeCount[i].Left := 230 + 81;
+      pDislikeCount[i].Top := pUserComment[i].Top + 14 + 9;
+      pDislikeCount[i].Font.Color := clWindowFrame;
+      pDislikeCount[i].Font.Size := 10;
+      pDislikeCount[i].Font.Name := 'Arial';
+      pDislikeCount[i].Caption := db.QueryPage['disliked'];
+
+      pDislikeComment[i] := TImage.Create(self);
+      InsertControl(pDislikeComment[i]);
+      pDislikeComment[i].Width := 16;
+      pDislikeComment[i].Height := 16;
+      pDislikeComment[i].Top := pUserComment[i].Top + 12 + 10;
+      pDislikeComment[i].Left := 230 + 92;
+      pDislikeComment[i].Cursor := crHandPoint;
+      pDislikeComment[i].Picture.LoadFromFile('images/dislike.png');
+
       db.QueryPage.Next;
       db.QueryPageInfo.Next;
+      db.QueryInsertComment.Next;
     end;
+
+    QueryCount:=db.QueryPage.RecordCount;
+      getContentHeight(QueryCount, 125);
+      if QueryCount > 1 then
+      begin
+        contentScroll.Visible := true;
+        for i := 2 to QueryCount do
+        begin
+          if contentScroll.Height <= 20 then break;
+          contentScroll.Height := contentScroll.Height - 75;
+        end;
+      end;
+
   end;
+end;
+
+procedure TcontentPage.LikeClick(Sender: TObject);
+var QueryLikeCount, i, id:integer;
+getID:TImage absolute sender;
+begin
+  id:=GetID.Tag;
+  QueryLikeCount := db.QueryPage['liked'];
+  showmessage(inttostr(id));
+  if db.QueryPage['rated'] = 0 then
+  begin
+    QueryLikeCount := QueryLikeCount + 1;
+    db.QueryInsertComment.SQL.Clear;
+    db.QueryInsertComment.SQL.Add('UPDATE comment SET rated = :rated, liked = :liked WHERE id = :id');
+    db.QueryInsertComment.ParamByName('rated').AsInteger := 1;
+    db.QueryInsertComment.ParamByName('liked').AsInteger := QueryLikeCount;
+    db.QueryInsertComment.ParamByName('id').AsInteger := id;
+    db.QueryInsertComment.Execute;
+
+    db.QueryInsertComment.SQL.Text := 'SELECT * FROM comment WHERE id = :id';
+    db.QueryInsertComment.ParamByName('id').AsInteger := id;
+    db.QueryInsertComment.Open;
+
+    pLikeCount[id].Caption := db.QueryInsertComment['liked'];
+    pLikeComment[id].Picture.LoadFromFile('images/like-enabled.png');
+  end
+  else if db.QueryPage['rated'] = 1 then
+  begin
+    QueryLikeCount := QueryLikeCount - 1;
+    db.QueryInsertComment.SQL.Clear;
+    db.QueryInsertComment.SQL.Add('UPDATE comment SET rated = :rated AND liked = :liked WHERE id_page = :id_page');
+    db.QueryInsertComment.ParamByName('rated').AsInteger := 0;
+    db.QueryInsertComment.ParamByName('liked').AsInteger := QueryLikeCount;
+    db.QueryInsertComment.ParamByName('id_page').AsInteger := PageID;
+    db.QueryInsertComment.Execute;
+
+    FreeAndNil(pAddComment);
+    FreeAndNil(pSendComment);
+    FreeAndNil(pUserIcon[0]);
+    for i := 1 to db.QueryPage.RecordCount do
+    begin
+      FreeAndNil(pUserComment[i]);
+      FreeAndNil(pUserName[i]);
+      FreeAndNil(pUserIcon[i]);
+      FreeAndNil(pLikeComment[i]);
+      FreeAndNil(pLikeCount[i]);
+      FreeAndNil(pDislikeComment[i]);
+      FreeAndNil(pDislikeCount[i]);
+    end;
+    posComment := 105 + 50 + pDescription.Height + pContent.Height;
+    LoadComment();
+  end;
+end;
+
+procedure TcontentPage.SendClick(Sender: TObject);
+var i:integer;
+begin
+  if (length(pAddComment.Lines.Text) > 128) or (length(pAddComment.Lines.Text) < 0) then
+  begin
+    showmessage('Длинна комментария должна быть не менее 1 и более 128 символов!');
+    exit;
+  end;
+
+  db.QueryInsertComment.SQL.Clear;
+  db.QueryInsertComment.SQL.Add('INSERT INTO comment (id_sender, id_page, comment) VALUES (:id_sender, :id_page, :comment)');
+  db.QueryInsertComment.ParamByName('id_sender').AsInteger := QueryUserID;
+  db.QueryInsertComment.ParamByName('id_page').AsInteger := PageID;
+  db.QueryInsertComment.ParamByName('comment').AsString := pAddComment.Lines.Text;
+  db.QueryInsertComment.Execute;
+
+  FreeAndNil(pAddComment);
+  FreeAndNil(pSendComment);
+  FreeAndNil(pUserIcon[0]);
+  for i := 1 to db.QueryPage.RecordCount do
+  begin
+    FreeAndNil(pUserComment[i]);
+    FreeAndNil(pUserName[i]);
+    FreeAndNil(pUserIcon[i]);
+    FreeAndNil(pLikeComment[i]);
+    FreeAndNil(pLikeCount[i]);
+    FreeAndNil(pDislikeComment[i]);
+    FreeAndNil(pDislikeCount[i]);
+  end;
+  posComment := 105 + 50 + pDescription.Height + pContent.Height;
+  LoadComment();
 end;
 
 procedure TcontentPage.GoToContent(Sender: TObject);//Возвращение к контенту
@@ -692,10 +864,19 @@ begin
   FreeAndNil(pSub);
   FreeAndNil(pDescription);
   FreeAndNil(pContent);
-  FreeAndNil(pUserIcon);
-  FreeAndNil(pUserName);
-  FreeAndNil(pUserComment);
   FreeAndNil(pAddComment);
+  FreeAndNil(pSendComment);
+//  FreeAndNil(p);
+  for i := 1 to sizeof(pUserIcon) do
+  begin
+    FreeAndNil(pUserIcon[i]);
+    FreeAndNil(pUserName[i]);
+    FreeAndNil(pUserComment[i]);
+    FreeAndNil(pLikeComment[i]);
+    FreeAndNil(pLikeCount[i]);
+    FreeAndNil(pDislikeComment[i]);
+    FreeAndNil(pDislikeCount[i]);
+  end;
 
   FormActivate(self);
   FormPaint(self);
