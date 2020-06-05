@@ -17,6 +17,7 @@ object db: Tdb
   object FDConnection1: TFDConnection
     Params.Strings = (
       'Server=stadzuki.myspt.ru'
+      'CharacterSet=utf8'
       'DriverID=MySQL')
     Left = 32
     Top = 8
@@ -45,5 +46,25 @@ object db: Tdb
     Connection = FDConnection1
     Left = 280
     Top = 80
+  end
+  object QueryLoadContent: TFDQuery
+    Connection = FDConnection1
+    Left = 368
+    Top = 80
+  end
+  object QueryPage: TFDQuery
+    Connection = FDConnection1
+    Left = 16
+    Top = 136
+  end
+  object QueryPageInfo: TFDQuery
+    Connection = FDConnection1
+    Left = 88
+    Top = 136
+  end
+  object QueryInsertComment: TFDQuery
+    Connection = FDConnection1
+    Left = 168
+    Top = 136
   end
 end

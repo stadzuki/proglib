@@ -23,6 +23,7 @@ type
     QueryPage: TFDQuery;
     QueryPageInfo: TFDQuery;
     QueryInsertComment: TFDQuery;
+    QueryComment: TFDQuery;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }

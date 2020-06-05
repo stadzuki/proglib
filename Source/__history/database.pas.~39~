@@ -17,6 +17,12 @@ type
     QueryReg: TFDQuery;
     QueryTheme: TFDQuery;
     QueryAuth: TFDQuery;
+    QueryAdmin: TFDQuery;
+    QueryContent: TFDQuery;
+    QueryLoadContent: TFDQuery;
+    QueryPage: TFDQuery;
+    QueryPageInfo: TFDQuery;
+    QueryInsertComment: TFDQuery;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }

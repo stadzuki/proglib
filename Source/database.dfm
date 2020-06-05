@@ -64,7 +64,12 @@ object db: Tdb
   end
   object QueryInsertComment: TFDQuery
     Connection = FDConnection1
-    Left = 168
+    Left = 176
     Top = 136
+  end
+  object QueryComment: TFDQuery
+    Connection = FDConnection1
+    Left = 360
+    Top = 152
   end
 end
