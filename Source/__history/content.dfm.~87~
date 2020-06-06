@@ -19,6 +19,8 @@ object contentPage: TcontentPage
   Position = poDesktopCenter
   Scaled = False
   OnActivate = FormActivate
+  OnClose = FormClose
+  OnCreate = FormCreate
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp
@@ -169,6 +171,7 @@ object contentPage: TcontentPage
       12BC02D4369C18CB41340F10E7027131100B6351B709889B6865390C80527701
       101702B12092F83420CEA6B5E530C08FE40810BB03882BE965390C08421DC00B
       A5A90A00BD2D1C1FE079EE420000000049454E44AE426082}
+    Visible = False
     OnClick = arrow_btnClick
   end
   object contentScroll: TImage

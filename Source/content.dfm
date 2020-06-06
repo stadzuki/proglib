@@ -19,6 +19,8 @@ object contentPage: TcontentPage
   Position = poDesktopCenter
   Scaled = False
   OnActivate = FormActivate
+  OnClose = FormClose
+  OnCreate = FormCreate
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp

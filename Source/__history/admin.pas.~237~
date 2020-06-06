@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtDlgs, RegularExpressions,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtDlgs, RegularExpressions, FireDAC.Stan.Param,
   Vcl.ComCtrls;
 
 type
@@ -103,9 +103,9 @@ begin
 
   db.QueryContent.SQL.Clear;
   db.QueryContent.SQL.Add('INSERT INTO content (c_type, c_title, c_description) VALUES ( :c_type, :c_title, :c_description);');
-  db.QueryContent.ParamByName('c_type').AsInteger := '3';
-  db.QueryContent.ParamByName('c_title').AsString := c_title.Lines.Text;
-  db.QueryContent.ParamByName('c_description').AsString := c_description.Text;
+  db.QueryContent.ParamByName('c_type').AsInteger := 3;
+  db.QueryContent.ParamByName('c_title').AsString := iTitle.Text;
+  db.QueryContent.ParamByName('c_description').AsString := iDesc.Text;
   db.QueryContent.Execute;
 
   ShowMessage('Контент добавлен');
@@ -162,7 +162,7 @@ begin
 //  c_description.Lines.Text := 'Введите описание';
 //  link_picture := '';
 //  acthor.Text := 'Укажите автора';
-
+  isAdminClosed := true;
   admin_control.Close;
 
 end;

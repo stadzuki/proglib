@@ -27,6 +27,8 @@ type
       MousePos: TPoint; var Handled: Boolean);
     procedure FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
       MousePos: TPoint; var Handled: Boolean);
+    procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   protected
     procedure CreateParams(var Params: TCreateParams) ; override;
   private
@@ -125,7 +127,8 @@ var
   isRateClick,//Первое нажатие на рейтинг
   isObject,
   contentOn,
-  contentOff
+  contentOff,
+  isAdminClosed
   :boolean;
 
 implementation
@@ -211,6 +214,8 @@ end;
 procedure TcontentPage.FormActivate(Sender: TObject);
 var i, titleLength, maxLength: integer;
 begin
+  if isAdminClosed = true then exit;
+  isAdminClosed := false;
   isPage := false;
   isRate := false;
   isRateClick := false;
@@ -426,6 +431,17 @@ begin
       end;
 
   end;
+  isAdminClosed := true;
+end;
+
+procedure TcontentPage.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  isAdminClosed := false;
+end;
+
+procedure TcontentPage.FormCreate(Sender: TObject);
+begin
+  isAdminClosed := false;
 end;
 
 procedure TcontentPage.LoadRate();//Создание рейтинга
@@ -479,11 +495,11 @@ begin
     db.QueryPageInfo.Open;
     pRating.Caption := FloatToStrF(db.QueryPageInfo['c_rate'], ffFixed, 1, 1);
     for i := 1 to 5 do pRate[i].Cursor := crDefault;
-    if db.QueryPage['rateCount'] > 0.2 then for i := 1 to 1 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] > 0.4 then for i := 1 to 2 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] > 0.6 then for i := 1 to 3 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] > 0.8 then for i := 1 to 4 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] > 1.0 then for i := 1 to 5 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] = 0.2 then for i := 1 to 1 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] = 0.4 then for i := 1 to 2 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] = 0.6 then for i := 1 to 3 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] = 0.8 then for i := 1 to 4 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] = 1.0 then for i := 1 to 5 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
   end
   else
   begin
@@ -501,9 +517,6 @@ procedure TcontentPage.LoadPage(var id:integer);//Загрузка страницы
 var i, resultMath:integer;
 math:real;
 begin
-//  FreeAndNil(iAdmin);
-//  FreeAndNil(iAdminBtn);
-
   PageID := id;
   arrow_btn.Visible := false;
   shutdown_btn.BringToFront;
@@ -622,8 +635,10 @@ end;
 //procedure TcontentPage.LoadComment(var CommentAdd:boolean; CommentAthor:boolean; CommentText:boolean; CoomentLike:boolean; CommentDis:boolean);
 procedure TcontentPage.LoadComment(var CommentAdd, CommentAthor, CommentText, CommentLike, CommentDis:boolean);
 var math:real;
-sender, i, resultMath:integer;
+sender, i, resultMath, getType:integer;
 begin
+  iAdminBtn.BringToFront;
+  iAdmin.BringToFront;
   posComment := 105 + 50 + pDescription.Height + pContent.Height;
   if isObject = true then
   begin
@@ -817,7 +832,8 @@ begin
         pDislikeComment[i].Top := pUserComment[i].Top + 12 + 10;
         pDislikeComment[i].Left := 230 + 92;
         pDislikeComment[i].Cursor := crHandPoint;
-        pDislikeComment[i].Picture.LoadFromFile('images/dislike.png');
+        if not db.QueryComment.IsEmpty and db.QueryComment['type'] = -1 then pDislikeComment[i].Picture.LoadFromFile('images/dislike-enabled.png')
+        else if db.QueryComment.IsEmpty then pDislikeComment[i].Picture.LoadFromFile('images/dislike.png');
       end;
 
       db.QueryPage.Next;
@@ -845,19 +861,43 @@ begin
 end;
 
 procedure TcontentPage.LikeClick(Sender: TObject);
-var QueryLikeCount, id,i:integer;
+var QueryLikeCount, QueryDisCount, id,i:integer;
 getID:TImage absolute sender;
 begin
   id:=GetID.Tag;
+
   for i := 1 to db.QueryPage.RecordCount do
   begin
     FreeAndNil(pLikeComment[i]);
     FreeAndNil(pLikeCount[i]);
   end;
+
   db.QueryPage.SQL.Text := 'SELECT * FROM comment WHERE id = :id';
   db.QueryPage.ParamByName('id').AsInteger := id;
   db.QueryPage.Open;
+
   QueryLikeCount := db.QueryPage['liked'];
+  QueryDisCount := db.QueryPage['disliked'];
+
+//  if db.QueryComment['type'] = -1 then
+//  begin
+//    QueryDisCount := QueryDisCount - 1;
+//    db.QueryInsertComment.SQL.Clear;
+//    db.QueryInsertComment.SQL.Add('UPDATE comment SET disliked = :disliked WHERE id = :id');
+//    db.QueryInsertComment.ParamByName('disliked').AsInteger := QueryDisCount;
+//    db.QueryInsertComment.ParamByName('id').AsInteger := id;
+//    db.QueryInsertComment.Execute;
+//
+//    db.QueryPage.SQL.Clear;
+//    db.QueryPage.SQL.Add('UPDATE likes SET type = :type WHERE id_liker = :id_liker AND id_comment = :id_comment');
+//    db.QueryPage.ParamByName('type').AsInteger := 1;
+//    db.QueryPage.ParamByName('id_liker').AsInteger := QueryUserID;
+//    db.QueryPage.ParamByName('id_comment').AsInteger := qCommentID;
+//
+//    LoadComment(contentOff, contentOff, contentOff, contentOn, contentOff);
+//    exit;
+//  end;
+
   if not db.QueryComment.IsEmpty then//Клик на лайк когда он пролайкано
   begin
     db.QueryPage.SQL.Clear;
@@ -882,6 +922,7 @@ begin
     db.QueryPage.ParamByName('id_liker').AsInteger := QueryUserID;
     db.QueryPage.ParamByName('id_page').AsInteger := PageID;
     db.QueryPage.ParamByName('id_comment').AsInteger := qCommentID;
+//    db.QueryPage.ParamByName('type').AsInteger := 1;
     db.QueryPage.Execute;
 
     QueryLikeCount := QueryLikeCount + 1;
@@ -938,7 +979,7 @@ begin
     FreeAndNil(pDislikeComment[i]);
     FreeAndNil(pDislikeCount[i]);
   end;
-
+  isAdminClosed := false;
   FormActivate(self);
   FormPaint(self);
   shutdown_btn.BringToFront;
@@ -968,6 +1009,9 @@ begin
 
 //    if db.QueryPage['c_rate'] <= 0 then QueryRateCount := RateCount
 //    else QueryRateCount := db.QueryPage['c_rate'] + RateCount;
+    db.QueryPage.SQL.Text := 'SELECT * FROM content WHERE id = :id';
+    db.QueryPage.ParamByName('id').AsInteger := PageID;
+    db.QueryPage.Open;
 
     RateCount := format('%1.1f', [RateCount]) + db.QueryPage['c_rate'];
 
@@ -1113,7 +1157,7 @@ begin
       scrollResult := scrollResult + 10;
       contentScroll.Top := contentScroll.Top + 15;
       iAdminBtn.Top := iAdminBtn.Top + 10;
-      iAdmin.Top := iAdminBtn.Top + 3;
+      iAdmin.Top := iAdminBtn.Top + 2;
     end;
   end;
 end;
@@ -1130,7 +1174,7 @@ begin
       scrollResult := scrollResult - 10;
       contentScroll.Top := contentScroll.Top - 15;
       iAdminBtn.Top := iAdminBtn.Top - 10;
-      iAdmin.Top := iAdminBtn.Top - 3;
+      iAdmin.Top := iAdminBtn.Top;
   end;
 end;
   //</mouseLogic>

@@ -162,7 +162,7 @@ begin
 //  c_description.Lines.Text := 'Введите описание';
 //  link_picture := '';
 //  acthor.Text := 'Укажите автора';
-
+  isAdminClosed := true;
   admin_control.Close;
 
 end;
