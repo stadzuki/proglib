@@ -635,7 +635,7 @@ end;
 //procedure TcontentPage.LoadComment(var CommentAdd:boolean; CommentAthor:boolean; CommentText:boolean; CoomentLike:boolean; CommentDis:boolean);
 procedure TcontentPage.LoadComment(var CommentAdd, CommentAthor, CommentText, CommentLike, CommentDis:boolean);
 var math:real;
-sender, i, resultMath, getType:integer;
+sender, i, resultMath, like_count:integer;
 begin
   iAdminBtn.BringToFront;
   iAdmin.BringToFront;
@@ -781,14 +781,13 @@ begin
         pUserComment[i].WordWrap := true;
       end;
 
+      db.QueryComment.SQL.Text := 'SELECT * FROM likes WHERE id_comment = :id_comment AND id_liker = :id_liker';
+      db.QueryComment.ParamByName('id_comment').AsInteger := qCommentID;
+      db.QueryComment.ParamByName('id_liker').AsInteger := QueryUserID;
+      db.QueryComment.Open;
+      
       if CommentLike = true then
       begin
-
-        db.QueryComment.SQL.Text := 'SELECT * FROM likes WHERE id_comment = :id_comment AND id_page = :id_page AND id_liker = :id_liker ORDER BY id DESC';
-        db.QueryComment.ParamByName('id_comment').AsInteger := qCommentID;
-        db.QueryComment.ParamByName('id_page').AsInteger := PageID;
-        db.QueryComment.ParamByName('id_liker').AsInteger := QueryUserID;
-        db.QueryComment.Open;
       
         SetLength(pLikeComment, db.QueryPage.RecordCount + 1);
         SetLength(pLikeCount, db.QueryPage.RecordCount + 1);
@@ -811,8 +810,8 @@ begin
         pLikeComment[i].Cursor := crHandPoint;
         pLikeComment[i].Tag := qID;
         pLikeComment[i].OnClick := LikeClick;
-        if not db.QueryComment.IsEmpty then pLikeComment[i].Picture.LoadFromFile('images/like-enabled.png')
-        else pLikeComment[i].Picture.LoadFromFile('images/like.png');
+        if not db.QueryComment['type'] > 0 then pLikeComment[i].Picture.LoadFromFile('images/like-enabled.png');
+        if db.QueryComment.IsEmpty then pLikeComment[i].Picture.LoadFromFile('images/like.png');
       end;
 
       if CommentDis = true then
@@ -836,7 +835,7 @@ begin
         pDislikeComment[i].Top := pUserComment[i].Top + 12 + 10;
         pDislikeComment[i].Left := 230 + 92;
         pDislikeComment[i].Cursor := crHandPoint;
-        if not db.QueryComment.IsEmpty and db.QueryComment['type'] = -1 then pDislikeComment[i].Picture.LoadFromFile('images/dislike-enabled.png')
+        if db.QueryComment.IsEmpty and db.QueryComment['type'] = 1 then pDislikeComment[i].Picture.LoadFromFile('images/dislike-enabled.png')
         else pDislikeComment[i].Picture.LoadFromFile('images/dislike.png');
       end;
 
@@ -908,7 +907,7 @@ begin
     db.QueryPage.SQL.Clear;
     db.QueryPage.SQL.Add('DELETE FROM likes WHERE id_liker = :id_liker AND id_comment = :id_comment');
     db.QueryPage.ParamByName('id_liker').AsInteger := QueryUserID;
-    db.QueryPage.ParamByName('id_comment').AsInteger := qCommentID;
+    db.QueryPage.ParamByName('id_comment').AsInteger := id;
     db.QueryPage.Execute;
 
     QueryLikeCount := QueryLikeCount - 1;
@@ -923,11 +922,11 @@ begin
   else
   begin
     db.QueryPage.SQL.Clear;
-    db.QueryPage.SQL.Add('INSERT INTO likes (id_liker, id_page, id_comment) VALUES (:id_liker, :id_page, :id_comment);');
+    db.QueryPage.SQL.Add('INSERT INTO likes (id_liker, id_page, id_comment, type) VALUES (:id_liker, :id_page, :id_comment, :type);');
     db.QueryPage.ParamByName('id_liker').AsInteger := QueryUserID;
     db.QueryPage.ParamByName('id_page').AsInteger := PageID;
-    db.QueryPage.ParamByName('id_comment').AsInteger := qCommentID;
-//    db.QueryPage.ParamByName('type').AsInteger := 1;
+    db.QueryPage.ParamByName('id_comment').AsInteger := id;
+    db.QueryPage.ParamByName('type').AsInteger := 1;
     db.QueryPage.Execute;
 
     QueryLikeCount := QueryLikeCount + 1;
