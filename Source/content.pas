@@ -120,7 +120,8 @@ var
   QueryTypeContent,//Описание контента
   posComment,//Отступы коментариев
   qID,
-  qCommentID
+  qCommentID,
+  getType
   :integer;
 
   isPage,//Если страница открыта
@@ -636,7 +637,7 @@ end;
 //procedure TcontentPage.LoadComment(var CommentAdd:boolean; CommentAthor:boolean; CommentText:boolean; CoomentLike:boolean; CommentDis:boolean);
 procedure TcontentPage.LoadComment(var CommentAdd, CommentAthor, CommentText, CommentLike, CommentDis:boolean);
 var math:real;
-sender, i, resultMath, like_count:integer;
+sender, i, resultMath:integer;
 begin
   iAdminBtn.BringToFront;
   iAdmin.BringToFront;
@@ -836,14 +837,14 @@ begin
         pDislikeComment[i].Width := 16;
         pDislikeComment[i].Height := 16;
         pDislikeComment[i].Top := pUserComment[i].Top + 12 + 10;
-        pDislikeComment[i].Left := 230 + 92;
+        pDislikeComment[i].Left := 230 + 85 + pDislikeCount[i].Width;
         pDislikeComment[i].Tag := qID;
         pDislikeComment[i].Cursor := crHandPoint;
         pDislikeComment[i].OnClick := DislikeClick;
         pDislikeComment[i].Picture.LoadFromFile('images/dislike.png');
-//        if db.QueryComment['type'] = -1 then pDislikeComment[i].Picture.LoadFromFile('images/dislike-enabled.png');
-//        if db.QueryComment.IsEmpty then pDislikeComment[i].Picture.LoadFromFile('images/dislike.png');
-        case db.QueryComment['type'] of
+
+        getType := db.QueryComment.FieldByName('type').AsInteger;
+        case getType of
           1: pLikeComment[i].Picture.LoadFromFile('images/like-enabled.png');
           -1: pDislikeComment[i].Picture.LoadFromFile('images/dislike-enabled.png');
         end;
@@ -897,6 +898,7 @@ begin
   begin
     QueryDisCount := QueryDisCount + 1;
     if QueryLikeCount > 0 then QueryLikeCount := QueryLikeCount - 1;
+    showmessage(inttostr(QueryLikeCount));
     db.QueryInsertComment.SQL.Clear;
     db.QueryInsertComment.SQL.Add('UPDATE comment SET (disliked = :disliked, liked = :liked) WHERE id = :id');
     db.QueryInsertComment.ParamByName('disliked').AsInteger := QueryDisCount;
@@ -929,6 +931,7 @@ begin
     db.QueryInsertComment.ParamByName('id').AsInteger := id;
     db.QueryInsertComment.Execute;
 
+    showmessage('Делает delete');
     LoadComment(contentOff, contentOff, contentOff, contentOff, contentOn);
   end
   else
@@ -948,6 +951,7 @@ begin
     db.QueryInsertComment.ParamByName('id').AsInteger := id;
     db.QueryInsertComment.Execute;
 
+    showmessage('Делает insert');
     LoadComment(contentOff, contentOff, contentOff, contentOff, contentOn);
   end;
 end;
