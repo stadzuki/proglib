@@ -42,6 +42,7 @@ type
     setting_label2: TLabel;
     setting_label3: TLabel;
     setting_label4: TLabel;
+    guest_text: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -258,11 +259,23 @@ begin
   clicked2:=0;
   user_settings.Height := 184;
   admin_settings.Visible := false;
+  if GuestMode = true then
+  begin
+    firstEnterprice.Hide;
+    user_icon.Visible := false;
+    arrow_control.Visible := false;
+    guest_text.Visible := true;
+    guest_text.Caption := 'Вы вошли как гость';
+    guest_text.Font.Color := clWindowFrame;
+    guest_text.Font.Size := 10;
+    guest_text.Left := 25;
+    exit;
+  end;
 
   db.QueryTheme.SQL.Text := 'SELECT u_theme FROM users WHERE u_login = ' +QuotedStr(loginForm.loginField.Text);
   db.QueryTheme.Open;
 
-  db.QueryAdmin.SQL.Text := 'SELECT u_admin FROM users WHERE u_login = ' +QuotedStr(loginForm.loginField.Text);
+  db.QueryAdmin.SQL.Text := 'SELECT * FROM users WHERE u_login = ' +QuotedStr(loginForm.loginField.Text);
   db.QueryAdmin.Open;
 
   if db.QueryAdmin['u_admin'] = 1 then admin_settings.Visible := true;
@@ -340,6 +353,14 @@ procedure ThomePage.FormPaint(Sender: TObject);
 var bg:TBitMap;//background image to firstEnterprise form
 begin
   bg:=TBitMap.Create;
+  if GuestMode = true then
+  begin
+    bg.LoadFromFile('images/bg-orange.bmp');
+    homePage.Canvas.Draw(0,0,bg); //position and picture
+    bg.Free;
+    exit;
+  end;
+
   case db.QueryTheme['u_theme'] of
     0: bg.LoadFromFile('images/bg-orange.bmp');
     1: bg.LoadFromFile('images/bg-blue.bmp');

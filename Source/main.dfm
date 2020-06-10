@@ -1292,4 +1292,12 @@ object homePage: ThomePage
     Visible = False
     OnClick = setting_label4Click
   end
+  object guest_text: TLabel
+    Left = 160
+    Top = 16
+    Width = 53
+    Height = 13
+    Caption = 'guest_text'
+    Visible = False
+  end
 end

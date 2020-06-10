@@ -236,8 +236,8 @@ object showLogin: TshowLogin
   object how_text: TLabel
     Left = 320
     Top = 260
-    Width = 99
-    Height = 18
+    Width = 81
+    Height = 16
     Caption = #1080#1083#1080' '#1074#1086#1081#1090#1080' '#1082#1072#1082
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
@@ -279,12 +279,13 @@ object showLogin: TshowLogin
       D6B5626B35CEFBAA5B526A1983FCAF11ADACA5A85A1DEAABCDCF34CD7ABBA46A
       FFF04E0FF95F29BAB8F5A45115FF4AD16D30EF17532D05532AF9FD3F00000000
       49454E44AE426082}
+    OnClick = guest_btnClick
   end
   object text_space: TLabel
     Left = 130
     Top = 413
     Width = 5
-    Height = 26
+    Height = 22
     Alignment = taCenter
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite

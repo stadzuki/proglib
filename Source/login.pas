@@ -25,6 +25,7 @@ type
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure FormActivate(Sender: TObject);
     procedure signIn_btnClick(Sender: TObject);
+    procedure guest_btnClick(Sender: TObject);
   protected
     procedure CreateParams(var Params: TCreateParams) ; override;
   private
@@ -40,11 +41,12 @@ var
   mouseX, mouseY : integer;
   //Other
   clicked:byte;//click on signIn_btn
+  GuestMode:boolean;
 
 
 implementation
 
-uses enterform, database;
+uses enterform, database, main;
 
 procedure TshowLogin.CreateParams(var Params: TCreateParams) ;
 begin
@@ -60,6 +62,7 @@ procedure TshowLogin.FormActivate(Sender: TObject);
 begin
   //--------------------
   mouseMoving := false;//Moving 'showLogin' TForm
+  GuestMode := false;
   //--------------------
   text_space.Caption := 'СОВЕТ: советуем Вам войти в аккаунт или создать его'+chr(13)+'для удобства использования программы';
 end;
@@ -71,6 +74,13 @@ begin
   bg.LoadFromFile('images/background-dark.bmp');
   showLogin.Canvas.Draw(0, 0, bg);
   bg.Free;
+end;
+
+procedure TshowLogin.guest_btnClick(Sender: TObject);
+begin
+  GuestMode := true;
+  homePage.Show;
+  showLogin.Hide;
 end;
 
 //  </main>

@@ -89,6 +89,7 @@ type
     procedure SendClick(Sender: TObject);
     procedure LikeClick(Sender: TObject);
     procedure DislikeClick(Sender: TObject);
+    procedure AddCommentClick(Sender: TObject);
     procedure LoadPage(var id:integer);//Создание страницы
     procedure LoadRate();//Загрузка рейтинга
     procedure LoadComment(var CommentAdd, CommentAthor, CommentText, CommentLike, CommentDis:boolean);
@@ -707,6 +708,7 @@ begin
     pAddComment.Font.Color := clWindowFrame;
     pAddComment.Top := posComment;
     pAddComment.Height := 35;
+    pAddComment.OnClick := AddCommentClick;
     pAddComment.Width := 250;
 
     pSendComment := TImage.Create(self);
@@ -843,11 +845,11 @@ begin
         pDislikeComment[i].OnClick := DislikeClick;
         pDislikeComment[i].Picture.LoadFromFile('images/dislike.png');
 
-        getType := db.QueryComment.FieldByName('type').AsInteger;
-        case getType of
-          1: pLikeComment[i].Picture.LoadFromFile('images/like-enabled.png');
-          -1: pDislikeComment[i].Picture.LoadFromFile('images/dislike-enabled.png');
-        end;
+      end;
+      getType := db.QueryComment.FieldByName('type').AsInteger;
+      case getType of
+        1: pLikeComment[i].Picture.LoadFromFile('images/like-enabled.png');
+        -1: pDislikeComment[i].Picture.LoadFromFile('images/dislike-enabled.png');
       end;
 
       db.QueryPage.Next;
@@ -876,7 +878,7 @@ begin
 end;
 
 procedure TcontentPage.DislikeClick(Sender: TObject);
-var QueryLikeCount, QueryDisCount, id,i:integer;
+var QueryLikeCount, QueryDisCount, id, i:integer;
 getID:TImage absolute sender;
 begin
   id:=GetID.Tag;
@@ -887,72 +889,86 @@ begin
     FreeAndNil(pDisLikeCount[i]);
   end;
 
+  for i := 1 to db.QueryPage.RecordCount do
+  begin
+    FreeAndNil(pLikeComment[i]);
+    FreeAndNil(pLikeCount[i]);
+  end;
+
   db.QueryPage.SQL.Text := 'SELECT * FROM comment WHERE id = :id';
   db.QueryPage.ParamByName('id').AsInteger := id;
   db.QueryPage.Open;
 
   QueryLikeCount := db.QueryPage['liked'];
   QueryDisCount := db.QueryPage['disliked'];
-
+  
+  db.QueryComment.SQL.Text := 'SELECT * FROM likes WHERE id_comment = :id_comment AND id_liker = :id_liker AND id_page = :id_page';
+  db.QueryComment.ParamByName('id_comment').AsInteger := id;
+  db.QueryComment.ParamByName('id_liker').AsInteger := QueryUserID;
+  db.QueryComment.ParamByName('id_page').AsInteger := PageID;
+  db.QueryComment.Open;
+  
   if db.QueryComment['type'] = 1 then
   begin
+    QueryLikeCount := QueryLikeCount - 1;
     QueryDisCount := QueryDisCount + 1;
-    if QueryLikeCount > 0 then QueryLikeCount := QueryLikeCount - 1;
-    showmessage(inttostr(QueryLikeCount));
+    
     db.QueryInsertComment.SQL.Clear;
-    db.QueryInsertComment.SQL.Add('UPDATE comment SET (disliked = :disliked, liked = :liked) WHERE id = :id');
+    db.QueryInsertComment.SQL.Add('UPDATE comment SET disliked = :disliked, liked = :liked WHERE id = :id');
     db.QueryInsertComment.ParamByName('disliked').AsInteger := QueryDisCount;
     db.QueryInsertComment.ParamByName('liked').AsInteger := QueryLikeCount;
     db.QueryInsertComment.ParamByName('id').AsInteger := id;
     db.QueryInsertComment.Execute;
 
-    db.QueryPage.SQL.Clear;
-    db.QueryPage.SQL.Add('UPDATE likes SET type = :type WHERE id_liker = :id_liker AND id_comment = :id_comment');
-    db.QueryPage.ParamByName('type').AsInteger := -1;
-    db.QueryPage.ParamByName('id_liker').AsInteger := QueryUserID;
-    db.QueryPage.ParamByName('id_comment').AsInteger := qCommentID;
-
-    LoadComment(contentOff, contentOff, contentOff, contentOff, contentOn);
-    exit;
-  end;
-
-  if not db.QueryComment.IsEmpty then//Клик на лайк когда он пролайкано
-  begin
-    db.QueryPage.SQL.Clear;
-    db.QueryPage.SQL.Add('DELETE FROM likes WHERE id_liker = :id_liker AND id_comment = :id_comment');
-    db.QueryPage.ParamByName('id_liker').AsInteger := QueryUserID;
-    db.QueryPage.ParamByName('id_comment').AsInteger := id;
-    db.QueryPage.Execute;
-
-    QueryDisCount := QueryDisCount - 1;
     db.QueryInsertComment.SQL.Clear;
-    db.QueryInsertComment.SQL.Add('UPDATE comment SET liked = :liked WHERE id = :id');
-    db.QueryInsertComment.ParamByName('liked').AsInteger := QueryDisCount;
-    db.QueryInsertComment.ParamByName('id').AsInteger := id;
+    db.QueryInsertComment.SQL.Add('UPDATE likes SET type = :type WHERE id_comment = :id_comment AND id_liker = :id_liker');
+    db.QueryInsertComment.ParamByName('id_comment').AsInteger := id;
+    db.QueryInsertComment.ParamByName('id_liker').AsInteger := QueryUserID;
+    db.QueryInsertComment.ParamByName('type').AsInteger := -1;
     db.QueryInsertComment.Execute;
 
-    showmessage('Делает delete');
-    LoadComment(contentOff, contentOff, contentOff, contentOff, contentOn);
-  end
-  else
+    LoadComment(contentOff, contentOff, contentOff, contentOn, contentOn);
+    exit;
+  end;
+  if not db.QueryComment.IsEmpty then
   begin
-    db.QueryPage.SQL.Clear;
-    db.QueryPage.SQL.Add('INSERT INTO likes (id_liker, id_page, id_comment, type) VALUES (:id_liker, :id_page, :id_comment, :type);');
-    db.QueryPage.ParamByName('id_liker').AsInteger := QueryUserID;
-    db.QueryPage.ParamByName('id_page').AsInteger := PageID;
-    db.QueryPage.ParamByName('id_comment').AsInteger := id;
-    db.QueryPage.ParamByName('type').AsInteger := -1;
-    db.QueryPage.Execute;
+    QueryDisCount := QueryDisCount - 1;
 
-    QueryDisCount := QueryDisCount + 1;
     db.QueryInsertComment.SQL.Clear;
     db.QueryInsertComment.SQL.Add('UPDATE comment SET disliked = :disliked WHERE id = :id');
     db.QueryInsertComment.ParamByName('disliked').AsInteger := QueryDisCount;
     db.QueryInsertComment.ParamByName('id').AsInteger := id;
     db.QueryInsertComment.Execute;
 
-    showmessage('Делает insert');
-    LoadComment(contentOff, contentOff, contentOff, contentOff, contentOn);
+    db.QueryInsertComment.SQL.Clear;
+    db.QueryInsertComment.SQL.Add('DELETE FROM likes WHERE id_liker = :id_liker AND id_comment = :id_comment');
+    db.QueryInsertComment.ParamByName('id_liker').AsInteger := QueryUserID;
+    db.QueryInsertComment.ParamByName('id_comment').AsInteger := id;
+    db.QueryInsertComment.Execute;
+
+    LoadComment(contentOff, contentOff, contentOff, contentOn, contentOn);
+    exit;
+  end;
+  if db.QueryComment.IsEmpty then
+  begin
+    QueryDisCount := QueryDisCount + 1;
+
+    db.QueryInsertComment.SQL.Clear;
+    db.QueryInsertComment.SQL.Add('UPDATE comment SET disliked = :disliked WHERE id = :id');
+    db.QueryInsertComment.ParamByName('disliked').AsInteger := QueryDisCount;
+    db.QueryInsertComment.ParamByName('id').AsInteger := id;
+    db.QueryInsertComment.Execute;
+
+    db.QueryInsertComment.SQL.Clear;
+    db.QueryInsertComment.SQL.Add('INSERT INTO likes (id_liker, id_page, id_comment, type) VALUES (:id_liker, :id_page, :id_comment, :type);');
+    db.QueryInsertComment.ParamByName('id_liker').AsInteger := QueryUserID;
+    db.QueryInsertComment.ParamByName('id_page').AsInteger := PageID;
+    db.QueryInsertComment.ParamByName('id_comment').AsInteger := id;
+    db.QueryInsertComment.ParamByName('type').AsInteger := -1;
+    db.QueryInsertComment.Execute;
+
+    LoadComment(contentOff, contentOff, contentOff, contentOn, contentOn);
+    exit;
   end;
 end;
 
@@ -968,69 +984,86 @@ begin
     FreeAndNil(pLikeCount[i]);
   end;
 
+  for i := 1 to db.QueryPage.RecordCount do
+  begin
+    FreeAndNil(pDisLikeComment[i]);
+    FreeAndNil(pDisLikeCount[i]);
+  end;
+  
   db.QueryPage.SQL.Text := 'SELECT * FROM comment WHERE id = :id';
   db.QueryPage.ParamByName('id').AsInteger := id;
   db.QueryPage.Open;
 
   QueryLikeCount := db.QueryPage['liked'];
   QueryDisCount := db.QueryPage['disliked'];
-
+  
+  db.QueryComment.SQL.Text := 'SELECT * FROM likes WHERE id_comment = :id_comment AND id_liker = :id_liker AND id_page = :id_page';
+  db.QueryComment.ParamByName('id_comment').AsInteger := id;
+  db.QueryComment.ParamByName('id_liker').AsInteger := QueryUserID;
+  db.QueryComment.ParamByName('id_page').AsInteger := PageID;
+  db.QueryComment.Open;
+  
   if db.QueryComment['type'] = -1 then
   begin
-    if QueryDisCount > 0 then QueryDisCount := QueryDisCount - 1;
     QueryLikeCount := QueryLikeCount + 1;
+    QueryDisCount := QueryDisCount - 1;
+    
     db.QueryInsertComment.SQL.Clear;
-    db.QueryInsertComment.SQL.Add('UPDATE comment SET (disliked = :disliked, liked = :liked) WHERE id = :id');
+    db.QueryInsertComment.SQL.Add('UPDATE comment SET disliked = :disliked, liked = :liked WHERE id = :id');
     db.QueryInsertComment.ParamByName('disliked').AsInteger := QueryDisCount;
     db.QueryInsertComment.ParamByName('liked').AsInteger := QueryLikeCount;
     db.QueryInsertComment.ParamByName('id').AsInteger := id;
     db.QueryInsertComment.Execute;
 
-    db.QueryPage.SQL.Clear;
-    db.QueryPage.SQL.Add('UPDATE likes SET type = :type WHERE id_liker = :id_liker AND id_comment = :id_comment');
-    db.QueryPage.ParamByName('type').AsInteger := 1;
-    db.QueryPage.ParamByName('id_liker').AsInteger := QueryUserID;
-    db.QueryPage.ParamByName('id_comment').AsInteger := qCommentID;
+    db.QueryInsertComment.SQL.Clear;
+    db.QueryInsertComment.SQL.Add('UPDATE likes SET type = :type WHERE id_comment = :id_comment AND id_liker = :id_liker');
+    db.QueryInsertComment.ParamByName('id_comment').AsInteger := id;
+    db.QueryInsertComment.ParamByName('id_liker').AsInteger := QueryUserID;
+    db.QueryInsertComment.ParamByName('type').AsInteger := 1;
+    db.QueryInsertComment.Execute;
 
-    LoadComment(contentOff, contentOff, contentOff, contentOn, contentOff);
+    LoadComment(contentOff, contentOff, contentOff, contentOn, contentOn);
     exit;
   end;
-
-  if not db.QueryComment.IsEmpty then//Клик на лайк когда он пролайкано
+  if not db.QueryComment.IsEmpty then
   begin
-    db.QueryPage.SQL.Clear;
-    db.QueryPage.SQL.Add('DELETE FROM likes WHERE id_liker = :id_liker AND id_comment = :id_comment');
-    db.QueryPage.ParamByName('id_liker').AsInteger := QueryUserID;
-    db.QueryPage.ParamByName('id_comment').AsInteger := id;
-    db.QueryPage.Execute;
-
     QueryLikeCount := QueryLikeCount - 1;
+
     db.QueryInsertComment.SQL.Clear;
     db.QueryInsertComment.SQL.Add('UPDATE comment SET liked = :liked WHERE id = :id');
     db.QueryInsertComment.ParamByName('liked').AsInteger := QueryLikeCount;
     db.QueryInsertComment.ParamByName('id').AsInteger := id;
     db.QueryInsertComment.Execute;
 
-    LoadComment(contentOff, contentOff, contentOff, contentOn, contentOff);
-  end
-  else
+    db.QueryInsertComment.SQL.Clear;
+    db.QueryInsertComment.SQL.Add('DELETE FROM likes WHERE id_liker = :id_liker AND id_comment = :id_comment');
+    db.QueryInsertComment.ParamByName('id_liker').AsInteger := QueryUserID;
+    db.QueryInsertComment.ParamByName('id_comment').AsInteger := id;
+    db.QueryInsertComment.Execute;
+
+    LoadComment(contentOff, contentOff, contentOff, contentOn, contentOn);
+    exit;
+  end;
+  if db.QueryComment.IsEmpty then
   begin
-    db.QueryPage.SQL.Clear;
-    db.QueryPage.SQL.Add('INSERT INTO likes (id_liker, id_page, id_comment, type) VALUES (:id_liker, :id_page, :id_comment, :type);');
-    db.QueryPage.ParamByName('id_liker').AsInteger := QueryUserID;
-    db.QueryPage.ParamByName('id_page').AsInteger := PageID;
-    db.QueryPage.ParamByName('id_comment').AsInteger := id;
-    db.QueryPage.ParamByName('type').AsInteger := 1;
-    db.QueryPage.Execute;
-
     QueryLikeCount := QueryLikeCount + 1;
+
     db.QueryInsertComment.SQL.Clear;
     db.QueryInsertComment.SQL.Add('UPDATE comment SET liked = :liked WHERE id = :id');
     db.QueryInsertComment.ParamByName('liked').AsInteger := QueryLikeCount;
     db.QueryInsertComment.ParamByName('id').AsInteger := id;
     db.QueryInsertComment.Execute;
 
-    LoadComment(contentOff, contentOff, contentOff, contentOn, contentOff);
+    db.QueryInsertComment.SQL.Clear;
+    db.QueryInsertComment.SQL.Add('INSERT INTO likes (id_liker, id_page, id_comment, type) VALUES (:id_liker, :id_page, :id_comment, :type);');
+    db.QueryInsertComment.ParamByName('id_liker').AsInteger := QueryUserID;
+    db.QueryInsertComment.ParamByName('id_page').AsInteger := PageID;
+    db.QueryInsertComment.ParamByName('id_comment').AsInteger := id;
+    db.QueryInsertComment.ParamByName('type').AsInteger := 1;
+    db.QueryInsertComment.Execute;
+
+    LoadComment(contentOff, contentOff, contentOff, contentOn, contentOn);
+    exit;
   end;
 end;
 
@@ -1130,6 +1163,12 @@ begin
     pRating.Caption := ' ';
     loadRate();
   end;
+end;
+
+procedure TcontentPage.AddCommentClick(Sender: TObject);
+begin
+  if AnsiCompareStr(pAddComment.Text, 'Прокомментировать') = 0 then pAddComment.Text := ''
+  else pAddComment.Text := pAddComment.Text;
 end;
 
 procedure TcontentPage.pRateLeave(Sender: TObject);//Курсор вне пределах Rate
