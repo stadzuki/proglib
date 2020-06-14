@@ -138,7 +138,8 @@ var
   isObject,
   contentOn,
   contentOff,
-  isAdminClosed
+  isAdminClosed,
+  isAdmin
   :boolean;
 
 implementation
@@ -161,7 +162,6 @@ begin
   posInfo[0] := 70;//Отступ слева
   posInfo[1] := 120;//Отступ сверху
 
-  showmessage(inttostr(StateType));
   db.QueryContent.SQL.Text := 'SELECT * FROM content WHERE c_type = :c_type';
   db.QueryContent.ParamByName('c_type').AsInteger := StateType;
   db.QueryContent.Open;
@@ -474,6 +474,7 @@ procedure TcontentPage.FormActivate(Sender: TObject);
 var i: integer;
 begin
   if isAdminClosed = true then exit;
+  isAdmin := false;
   isAdminClosed := false;
   isPage := false;
   isRate := false;
@@ -515,6 +516,8 @@ begin
     iAdmin.OnClick := iAdminClick;
     iAdmin.Font.Color := clWhite;
     iAdmin.Top := 2;
+
+    isAdmin := true;
   end;
 
   LoadContent;
@@ -602,7 +605,7 @@ begin
     if db.QueryPage['rateCount'] = 0.4 then for i := 1 to 2 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
     if db.QueryPage['rateCount'] = 0.6 then for i := 1 to 3 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
     if db.QueryPage['rateCount'] = 0.8 then for i := 1 to 4 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
-    if db.QueryPage['rateCount'] = 1.0 then for i := 1 to 5 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
+    if db.QueryPage['rateCount'] >= 1.0 then for i := 1 to 5 do pRate[i].Picture.LoadFromFile('images/star-fill.png');
   end
   else
   begin
@@ -624,6 +627,8 @@ begin
   arrow_btn.Visible := false;
   shutdown_btn.BringToFront;
   collapse_btn.BringToFront;
+  for i  := 1 to 4 do FreeAndNil(leftIcons[i]);
+
 
   for i := 1 to db.QueryContent.RecordCount do
   begin
@@ -740,12 +745,14 @@ procedure TcontentPage.LoadComment(var CommentAdd, CommentAthor, CommentText, Co
 var math:real;
 sender, i, resultMath:integer;
 begin
-  iAdminBtn.BringToFront;
-  iAdmin.BringToFront;
+  if isAdmin = true then
+  begin
+    iAdminBtn.BringToFront;
+    iAdmin.BringToFront;
+  end;
   posComment := 105 + 50 + pDescription.Height + pContent.Height;
   if isObject = true then
   begin
-
     if CommentAdd = true then
     begin
       FreeAndNil(pAddComment);
@@ -835,13 +842,16 @@ begin
       db.QueryInsertComment.ParamByName('id_page').AsInteger := PageID;
       db.QueryInsertComment.Open;
       qID := db.QueryPage['id'];
+      try
+        sender := db.QueryPage['id_sender'];
+        db.QueryPageInfo.SQL.Text := 'SELECT * FROM users WHERE id = :id';
+        db.QueryPageInfo.ParamByName('id').AsInteger := sender;
+        db.QueryPageInfo.Open;
 
-      sender := db.QueryPage['id_sender'];
-      db.QueryPageInfo.SQL.Text := 'SELECT * FROM users WHERE id = :id';
-      db.QueryPageInfo.ParamByName('id').AsInteger := sender;
-      db.QueryPageInfo.Open;
+        qCommentID := db.QueryPage['id'];
+      finally
 
-      qCommentID := db.QueryPage['id'];
+      end;
 
       if CommentAthor = true then
       begin
@@ -878,9 +888,13 @@ begin
         pUserComment[i].Font.Size := 10;
         pUserComment[i].Font.Color := clWindowFrame;
         pUserComment[i].Width := 300;
-        math := (length(pUserComment[i].Caption)+240)/5;
-        resultMath := trunc(math);
-        pUserComment[i].Height := resultMath;
+//        math := (length(pUserComment[i].Caption)+240)/5;
+//        resultMath := trunc(math);
+//        if (length(pUserComment[i].Caption) > 55) and (pUserComment[i].width > 295) then pUserComment[i].Height := 17;
+//        if length(pUserComment[i].Caption) > 110 then pUserComment[i].Height := 34;
+//        if length(pUserComment[i].Caption) > 165 then pUserComment[i].Height := 50;
+
+        pUserComment[i].Height := 17;
         pUserComment[i].AutoSize := false;
         pUserComment[i].WordWrap := true;
       end;
@@ -900,7 +914,7 @@ begin
         pLikeCount[i] := TLabel.Create(self);
         InsertControl(pLikeCount[i]);
         pLikeCount[i].Left := 230 + 45;
-        pLikeCount[i].Top := pUserComment[i].Top + 14 + 9;
+        pLikeCount[i].Top := pUserComment[i].Top + pUserComment[i].Height + 6;
         pLikeCount[i].Font.Color := clWindowFrame;
         pLikeCount[i].Font.Size := 10;
         pLikeCount[i].Font.Name := 'Arial';
@@ -910,7 +924,7 @@ begin
         InsertControl(pLikeComment[i]);
         pLikeComment[i].Width := 16;
         pLikeComment[i].Height := 16;
-        pLikeComment[i].Top := pUserComment[i].Top + 12 + 10;
+        pLikeComment[i].Top := pUserComment[i].Top + pUserComment[i].Height + 11;
         pLikeComment[i].Left := 230 + 50 + 6;
         pLikeComment[i].Cursor := crHandPoint;
         pLikeComment[i].Tag := qID;
@@ -928,7 +942,7 @@ begin
         pDislikeCount[i] := TLabel.Create(self);
         InsertControl(pDislikeCount[i]);
         pDislikeCount[i].Left := 230 + 81;
-        pDislikeCount[i].Top := pUserComment[i].Top + 14 + 9;
+        pDislikeCount[i].Top := pUserComment[i].Top + pUserComment[i].Height + 6;
         pDislikeCount[i].Font.Color := clWindowFrame;
         pDislikeCount[i].Font.Size := 10;
         pDislikeCount[i].Font.Name := 'Arial';
@@ -938,7 +952,7 @@ begin
         InsertControl(pDislikeComment[i]);
         pDislikeComment[i].Width := 16;
         pDislikeComment[i].Height := 16;
-        pDislikeComment[i].Top := pUserComment[i].Top + 12 + 10;
+        pDislikeComment[i].Top := pUserComment[i].Top + pUserComment[i].Height + 11;
         pDislikeComment[i].Left := 230 + 85 + pDislikeCount[i].Width;
         pDislikeComment[i].Tag := qID;
         pDislikeComment[i].Cursor := crHandPoint;
@@ -1169,9 +1183,19 @@ end;
 
 procedure TcontentPage.SendClick(Sender: TObject);
 begin
-  if (length(pAddComment.Lines.Text) > 128) or (length(pAddComment.Lines.Text) < 0) then
+  if (length(pAddComment.Lines.Text) > 60) or (length(pAddComment.Lines.Text) < 1) then
   begin
     showmessage('Длинна комментария должна быть не менее 1 и более 128 символов!');
+    exit;
+  end;
+  if pAddComment.Lines.Count > 1 then
+  begin
+    showmessage('В этом поле для ввода не стоит переносить строки');
+    exit;
+  end;
+  if ansicomparetext(pAddComment.Lines.Text, 'Прокомментировать') = 0 then
+  begin
+    showmessage('Заполните поле');
     exit;
   end;
 
@@ -1181,12 +1205,13 @@ begin
   db.QueryInsertComment.ParamByName('id_page').AsInteger := PageID;
   db.QueryInsertComment.ParamByName('comment').AsString := pAddComment.Lines.Text;
   db.QueryInsertComment.Execute;
-  LoadComment(contentOff, contentOn, contentOn, contentOn, contentOn);
+  LoadComment(contentOn, contentOn, contentOn, contentOn, contentOn);
 end;
 
 procedure TcontentPage.GoToContent(Sender: TObject);//Возвращение к контенту
 var i:integer;
 begin
+  for i := 1 to 4 do FreeAndNil(leftIcons[i]);
   FreeAndNil(pGoBack);
   FreeAndNil(pItem);
   FreeAndNil(pDownload);
@@ -1220,7 +1245,10 @@ end;
 
 procedure TcontentPage.DownloadClick(Sender: TObject);
 begin
- ShellExecute(0,'Open',PWideChar(db.QueryPage.FieldByName('c_download').AsString),nil,nil,SW_NORMAL);
+  db.QueryPage.SQL.Text := 'SELECT * FROM content WHERE id = :id';
+  db.QueryPage.ParamByName('id').AsInteger := PageID;
+  db.QueryPage.Open;
+  ShellExecute(0,'Open',PWideChar(db.QueryPage.FieldByName('c_download').AsString),nil,nil,SW_NORMAL);
 end;
 
 procedure TcontentPage.navClick(Sender: TObject);
@@ -1430,8 +1458,11 @@ begin
       arrow_btn.Top := arrow_btn.Top + 10;
       scrollResult := scrollResult + 10;
       contentScroll.Top := contentScroll.Top + 15;
-      iAdminBtn.Top := iAdminBtn.Top + 10;
-      iAdmin.Top := iAdminBtn.Top + 2;
+      if isAdmin = true then
+      begin
+        iAdminBtn.Top := iAdminBtn.Top + 10;
+        iAdmin.Top := iAdminBtn.Top + 2;
+      end;
     end;
   end;
 end;
@@ -1447,8 +1478,11 @@ begin
       arrow_btn.Top := arrow_btn.Top - 10;
       scrollResult := scrollResult - 10;
       contentScroll.Top := contentScroll.Top - 15;
-      iAdminBtn.Top := iAdminBtn.Top - 10;
-      iAdmin.Top := iAdminBtn.Top;
+      if isAdmin = true then
+      begin
+        iAdminBtn.Top := iAdminBtn.Top - 10;
+        iAdmin.Top := iAdminBtn.Top;
+      end;
   end;
 end;
   //</mouseLogic>

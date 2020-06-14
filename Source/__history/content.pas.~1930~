@@ -97,6 +97,7 @@ type
     procedure LoadPage(var id:integer);//Создание страницы
     procedure LoadNav();
     procedure LoadRate();//Загрузка рейтинга
+    procedure LoadContent();
     procedure LoadComment(var CommentAdd, CommentAthor, CommentText, CommentLike, CommentDis:boolean);
 //    procedure LoadComment(var CommentAdd, CommentAthor, CommentText, CoomentLike, CommentDis:boolean);
 //    procedure LoadComment(var CommentAdd:boolean; CommentAthor:boolean; CommentText:boolean; CoomentLike:boolean; CommentDis:boolean); overload;
@@ -127,7 +128,8 @@ var
   posComment,//Отступы коментариев
   qID,
   qCommentID,
-  getType
+  getType,
+  maxLength
   :integer;
 
   isPage,//Если страница открыта
@@ -136,7 +138,8 @@ var
   isObject,
   contentOn,
   contentOff,
-  isAdminClosed
+  isAdminClosed,
+  isAdmin
   :boolean;
 
 implementation
@@ -144,6 +147,177 @@ implementation
 {$R *.dfm}
 
 uses main, database, enter, enterform, login, themes, admin;
+
+procedure tContentPage.LoadContent;
+var i, titleLength: integer;
+begin
+
+  bgTop := 30;
+  ImageTop := 40;
+  TitleTop := 40;
+  subTop := 43;
+  descTop := 65;
+  RateLeft := 50;
+  SetLength(posInfo, 4);
+  posInfo[0] := 70;//Отступ слева
+  posInfo[1] := 120;//Отступ сверху
+
+  db.QueryContent.SQL.Text := 'SELECT * FROM content WHERE c_type = :c_type';
+  db.QueryContent.ParamByName('c_type').AsInteger := StateType;
+  db.QueryContent.Open;
+
+  if db.QueryContent.IsEmpty = false then
+  begin
+    //Контент для справочника
+    if db.QueryContent['c_type'] = 3 then
+    begin
+      iText := TLabel.Create(nil);
+      InsertControl(iText);
+      iText.Left := 100;
+      iText.Top := 50;
+      iText.Caption := 'Справочник';
+      iText.Font.Color := clWindowFrame;
+      iText.Font.Size := 16;
+      iText.Caption := 'Справочник  ';
+
+      SetLength(iTitle, 4);
+      i:=1;
+      while not db.QueryContent.Eof do
+      begin
+        iTitle[i] := TLabel.Create(nil);
+        InsertControl(iTitle[i]);
+        if posInfo[0] > 660 then
+        begin
+          posInfo[0] := 70;
+          posInfo[1] := posInfo[1] + maxLength;
+          maxLength := 0;
+        end;
+        posInfo[0] := posInfo[0] + maxLength + 30;
+        iTitle[i].Left := posInfo[0];
+        iTitle[i].Top := posInfo[1];
+        iTitle[i].Caption := db.QueryContent['c_title'];
+        iTitle[i].Font.Size := 12;
+        if maxLength < iTitle[i].Width then maxLength := iTitle[i].Width;
+        iTitle[i].Font.Color := clHotLight;
+        iTitle[i].Font.Style := [fsUnderline];
+        inc(i);
+        db.QueryContent.next;
+      end;
+      exit;
+    end;
+
+    //Создание контента
+    SetLength(bgContent, db.QueryContent.RecordCount + 1);
+    SetLength(bgImg, db.QueryContent.RecordCount + 1);
+    SetLength(titleContent, db.QueryContent.RecordCount + 1);
+    SetLength(subContent, db.QueryContent.RecordCount + 1);
+    SetLength(descriptionContent, db.QueryContent.RecordCount + 1);
+    i:=1;
+//      for i := 1 to db.QueryContent.RecordCount do
+    while not db.QueryContent.Eof do
+    begin
+        //Создание заднего фона
+      bgContent[i]:=TImage.Create(nil);
+      InsertControl(bgContent[i]);
+      bgContent[i].Height := 135;
+      bgContent[i].Width := 635;
+      bgContent[i].Left := 107;
+      bgContent[i].Top := bgTop;
+      bgTop := bgTop + 165;
+      bgContent[i].Cursor := crHandPoint;
+      bgContent[i].tag := db.QueryContent.fieldByname('ID').asinteger;
+      bgContent[i].OnClick := bgContentClick;
+      bgContent[i].Picture.LoadFromFile('images/element.png');
+
+        //Создание картинки
+      QueryID := db.QueryContent['id'];
+      bgImg[i]:=TImage.Create(nil);
+      InsertControl(bgImg[i]);
+      bgImg[i].Height := 109;
+      bgImg[i].Width := 85;
+      bgImg[i].Left := 120;
+      bgImg[i].Top := ImageTop;
+      ImageTop := ImageTop + 165;
+      bgImg[i].Cursor := crHandPoint;
+      bgImg[i].Stretch := true;
+      bgImg[i].tag := db.QueryContent.fieldByname('ID').asinteger;
+      bgImg[i].OnClick := bgImgClick;
+
+      db.QueryLoadContent.SQL.Text := 'SELECT * FROM content WHERE id = :id';
+      db.QueryLoadContent.ParamByName('id').AsInteger := QueryID;
+      db.QueryLoadContent.Open;
+      link := db.QueryLoadContent['c_src'];
+      bgImg[i].Picture.LoadFromFile(link);
+
+        //Создание заголовка
+      titleContent[i]:=TLabel.Create(nil);
+      InsertControl(titleContent[i]);
+      titleContent[i].Left := 220;
+      titleContent[i].Top := TitleTop;
+      TitleTop := TitleTop + 165;
+      titleContent[i].Font.Color := clWindowFrame;
+      titleContent[i].Font.Name := 'Century Gothic';
+      titleContent[i].Font.Size := 12;
+      titleContent[i].Font.Style := [fsBold];
+      titleContent[i].Cursor := crHandPoint;
+      titleContent[i].tag := db.QueryContent.fieldByname('ID').asinteger;
+      titleContent[i].OnClick := titleContentClick;
+
+      titleContent[i].Caption := db.QueryLoadContent['c_title'];
+
+        //Создание подзаголовка
+      titleLength := titleContent[i].Width;
+      subContent[i]:=TLabel.Create(nil);
+      InsertControl(subContent[i]);
+      subContent[i].Left := 222 + titleLength;
+      subContent[i].Top := subTop;
+      subTop := subTop + 165;
+      subContent[i].Font.Color := clWindowFrame;
+      subContent[i].Font.Name := 'Century Gothic';
+      subContent[i].Font.Size := 10;
+      subContent[i].Cursor := crHandPoint;
+      subContent[i].tag := db.QueryContent.fieldByname('ID').asinteger;
+      subContent[i].OnClick := subContentClick;
+
+      QueryTypeContent := db.QueryLoadContent['c_typeContent'];
+      case QueryTypeContent of
+       0: QueryType := 'Книга';
+       1: QueryType := 'Справочник';
+       2: QueryType := 'Энциклопедия';
+       3: QueryType := 'Программа';
+       4: QueryType := 'Утилита';
+       5: QueryType := 'Текстовый редактор';
+       6: QueryType := 'Библиотека';
+      end;
+
+      subContent[i].Caption := ', ' + QueryType+', автор: ' +db.QueryLoadContent['c_athor'];
+
+        //Создание описания
+      descriptionContent[i]:=TLabel.Create(nil);
+      InsertControl(descriptionContent[i]);
+      descriptionContent[i].Left := 220;
+      descriptionContent[i].Top := descTop;
+      descTop := descTop + 165;
+      descriptionContent[i].Font.Color := clWindowFrame;
+      descriptionContent[i].Font.Name := 'Century Gothic';
+      descriptionContent[i].Font.Size := 8;
+      descriptionContent[i].Width := 515;
+      descriptionContent[i].Height := 85;
+      descriptionContent[i].AutoSize := false;
+      descriptionContent[i].WordWrap := true;
+      descriptionContent[i].Cursor := crHandPoint;
+      descriptionContent[i].tag := db.QueryContent.fieldByname('ID').asinteger;
+      descriptionContent[i].OnClick := descriptionContentClick;
+
+      descriptionContent[i].Caption := db.QueryLoadContent['c_description'];
+
+      bgContent[i].Picture.LoadFromFile('images/bg_element.png'); { Само изображение подгружаем в самом конце для того чтобы
+      был хоть какой-нибудь контент если проблемы с бд или с сервером }
+      inc(i);
+      db.QueryContent.next;
+    end;
+  end;
+end;
 
 procedure TcontentPage.CreateParams(var Params: TCreateParams);//Создание иконки на панели задачь
 begin
@@ -297,9 +471,10 @@ begin
 end;
 
 procedure TcontentPage.FormActivate(Sender: TObject);
-var i, titleLength, maxLength: integer;
+var i: integer;
 begin
   if isAdminClosed = true then exit;
+  isAdmin := false;
   isAdminClosed := false;
   isPage := false;
   isRate := false;
@@ -317,15 +492,6 @@ begin
 
   arrow_btn.Visible := true;
   scrollResult := 465;
-  bgTop := 30;
-  ImageTop := 40;
-  TitleTop := 40;
-  subTop := 43;
-  descTop := 65;
-  RateLeft := 50;
-  SetLength(posInfo, 4);
-  posInfo[0] := 70;//Отступ слева
-  posInfo[1] := 120;//Отступ сверху
 
   db.QueryPageInfo.SQL.Text := 'SELECT * FROM users WHERE u_login = :u_login';
   db.QueryPageInfo.ParamByName('u_login').AsString := loginForm.loginField.Text;
@@ -350,176 +516,26 @@ begin
     iAdmin.OnClick := iAdminClick;
     iAdmin.Font.Color := clWhite;
     iAdmin.Top := 2;
+
+    isAdmin := true;
   end;
 
-  db.QueryContent.SQL.Text := 'SELECT * FROM content WHERE c_type = :c_type';
-  db.QueryContent.ParamByName('c_type').AsInteger := StateType;
-  db.QueryContent.Open;
+  LoadContent;
 
   if db.QueryContent.IsEmpty = false then
   begin
-        //Контент для справочника
-    if db.QueryContent['c_type'] = 3 then
+    //Создание скролла
+    QueryCount:=db.QueryContent.RecordCount;
+    getContentHeight(QueryCount, 165, 3, 4);
+    if QueryCount > 3 then
     begin
-      iText := TLabel.Create(nil);
-      InsertControl(iText);
-      iText.Left := 100;
-      iText.Top := 50;
-      iText.Caption := 'Справочник';
-      iText.Font.Color := clWindowFrame;
-      iText.Font.Size := 16;
-      iText.Caption := 'Справочник  ';
-
-      SetLength(iTitle, 4);
-      i:=1;
-      while not db.QueryContent.Eof do
+      contentScroll.Visible := true;
+      for i := 4 to QueryCount do
       begin
-        iTitle[i] := TLabel.Create(nil);
-        InsertControl(iTitle[i]);
-        if posInfo[0] > 660 then
-        begin
-          posInfo[0] := 70;
-          posInfo[1] := posInfo[1] + maxLength;
-          maxLength := 0;
-        end;
-        posInfo[0] := posInfo[0] + maxLength + 30;
-        iTitle[i].Left := posInfo[0];
-        iTitle[i].Top := posInfo[1];
-        iTitle[i].Caption := db.QueryContent['c_title'];
-        iTitle[i].Font.Size := 12;
-        if maxLength < iTitle[i].Width then maxLength := iTitle[i].Width;
-        iTitle[i].Font.Color := clHotLight;
-        iTitle[i].Font.Style := [fsUnderline];
-        inc(i);
-        db.QueryContent.next;
+        if contentScroll.Height <= 20 then break;
+        contentScroll.Height := contentScroll.Height - 97;
       end;
-      exit;
     end;
-
-      //Создание контента
-      SetLength(bgContent, db.QueryContent.RecordCount + 1);
-      SetLength(bgImg, db.QueryContent.RecordCount + 1);
-      SetLength(titleContent, db.QueryContent.RecordCount + 1);
-      SetLength(subContent, db.QueryContent.RecordCount + 1);
-      SetLength(descriptionContent, db.QueryContent.RecordCount + 1);
-      i:=1;
-//      for i := 1 to db.QueryContent.RecordCount do
-      while not db.QueryContent.Eof do
-      begin
-          //Создание заднего фона
-        bgContent[i]:=TImage.Create(nil);
-        InsertControl(bgContent[i]);
-        bgContent[i].Height := 135;
-        bgContent[i].Width := 635;
-        bgContent[i].Left := 107;
-        bgContent[i].Top := bgTop;
-        bgTop := bgTop + 165;
-        bgContent[i].Cursor := crHandPoint;
-        bgContent[i].tag := db.QueryContent.fieldByname('ID').asinteger;
-        bgContent[i].OnClick := bgContentClick;
-        bgContent[i].Picture.LoadFromFile('images/element.png');
-
-          //Создание картинки
-        QueryID := db.QueryContent['id'];
-        bgImg[i]:=TImage.Create(nil);
-        InsertControl(bgImg[i]);
-        bgImg[i].Height := 109;
-        bgImg[i].Width := 85;
-        bgImg[i].Left := 120;
-        bgImg[i].Top := ImageTop;
-        ImageTop := ImageTop + 165;
-        bgImg[i].Cursor := crHandPoint;
-        bgImg[i].Stretch := true;
-        bgImg[i].tag := db.QueryContent.fieldByname('ID').asinteger;
-        bgImg[i].OnClick := bgImgClick;
-
-        db.QueryLoadContent.SQL.Text := 'SELECT * FROM content WHERE id = :id';
-        db.QueryLoadContent.ParamByName('id').AsInteger := QueryID;
-        db.QueryLoadContent.Open;
-        link := db.QueryLoadContent['c_src'];
-        bgImg[i].Picture.LoadFromFile(link);
-
-          //Создание заголовка
-        titleContent[i]:=TLabel.Create(nil);
-        InsertControl(titleContent[i]);
-        titleContent[i].Left := 220;
-        titleContent[i].Top := TitleTop;
-        TitleTop := TitleTop + 165;
-        titleContent[i].Font.Color := clWindowFrame;
-        titleContent[i].Font.Name := 'Century Gothic';
-        titleContent[i].Font.Size := 12;
-        titleContent[i].Font.Style := [fsBold];
-        titleContent[i].Cursor := crHandPoint;
-        titleContent[i].tag := db.QueryContent.fieldByname('ID').asinteger;
-        titleContent[i].OnClick := titleContentClick;
-
-        titleContent[i].Caption := db.QueryLoadContent['c_title'];
-
-          //Создание подзаголовка
-        titleLength := titleContent[i].Width;
-        subContent[i]:=TLabel.Create(nil);
-        InsertControl(subContent[i]);
-        subContent[i].Left := 222 + titleLength;
-        subContent[i].Top := subTop;
-        subTop := subTop + 165;
-        subContent[i].Font.Color := clWindowFrame;
-        subContent[i].Font.Name := 'Century Gothic';
-        subContent[i].Font.Size := 10;
-        subContent[i].Cursor := crHandPoint;
-        subContent[i].tag := db.QueryContent.fieldByname('ID').asinteger;
-        subContent[i].OnClick := subContentClick;
-
-        QueryTypeContent := db.QueryLoadContent['c_typeContent'];
-        case QueryTypeContent of
-         0: QueryType := 'Книга';
-         1: QueryType := 'Справочник';
-         2: QueryType := 'Энциклопедия';
-         3: QueryType := 'Программа';
-         4: QueryType := 'Утилита';
-         5: QueryType := 'Текстовый редактор';
-         6: QueryType := 'Библиотека';
-        end;
-
-        subContent[i].Caption := ', ' + QueryType+', автор: ' +db.QueryLoadContent['c_athor'];
-
-          //Создание описания
-        descriptionContent[i]:=TLabel.Create(nil);
-        InsertControl(descriptionContent[i]);
-        descriptionContent[i].Left := 220;
-        descriptionContent[i].Top := descTop;
-        descTop := descTop + 165;
-        descriptionContent[i].Font.Color := clWindowFrame;
-        descriptionContent[i].Font.Name := 'Century Gothic';
-        descriptionContent[i].Font.Size := 8;
-        descriptionContent[i].Width := 515;
-        descriptionContent[i].Height := 85;
-        descriptionContent[i].AutoSize := false;
-        descriptionContent[i].WordWrap := true;
-        descriptionContent[i].Cursor := crHandPoint;
-        descriptionContent[i].tag := db.QueryContent.fieldByname('ID').asinteger;
-        descriptionContent[i].OnClick := descriptionContentClick;
-
-        descriptionContent[i].Caption := db.QueryLoadContent['c_description'];
-
-        bgContent[i].Picture.LoadFromFile('images/bg_element.png'); { Само изображение подгружаем в самом конце для того чтобы
-        был хоть какой-нибудь контент если проблемы с бд или с сервером }
-        inc(i);
-        db.QueryContent.next;
-      end;
-
-      //Создание скролла
-      QueryCount:=db.QueryContent.RecordCount;
-      getContentHeight(QueryCount, 165, 3, 4);
-      if QueryCount > 3 then
-      begin
-        contentScroll.Visible := true;
-        for i := 4 to QueryCount do
-        begin
-          if contentScroll.Height <= 20 then break;
-          contentScroll.Height := contentScroll.Height - 97;
-        end;
-      end;
-
   end;
   isAdminClosed := true;
 end;
@@ -611,6 +627,8 @@ begin
   arrow_btn.Visible := false;
   shutdown_btn.BringToFront;
   collapse_btn.BringToFront;
+  for i  := 1 to 4 do FreeAndNil(leftIcons[i]);
+
 
   for i := 1 to db.QueryContent.RecordCount do
   begin
@@ -727,12 +745,14 @@ procedure TcontentPage.LoadComment(var CommentAdd, CommentAthor, CommentText, Co
 var math:real;
 sender, i, resultMath:integer;
 begin
-  iAdminBtn.BringToFront;
-  iAdmin.BringToFront;
+  if isAdmin = true then
+  begin
+    iAdminBtn.BringToFront;
+    iAdmin.BringToFront;
+  end;
   posComment := 105 + 50 + pDescription.Height + pContent.Height;
   if isObject = true then
   begin
-
     if CommentAdd = true then
     begin
       FreeAndNil(pAddComment);
@@ -822,13 +842,16 @@ begin
       db.QueryInsertComment.ParamByName('id_page').AsInteger := PageID;
       db.QueryInsertComment.Open;
       qID := db.QueryPage['id'];
+      try
+        sender := db.QueryPage['id_sender'];
+        db.QueryPageInfo.SQL.Text := 'SELECT * FROM users WHERE id = :id';
+        db.QueryPageInfo.ParamByName('id').AsInteger := sender;
+        db.QueryPageInfo.Open;
 
-      sender := db.QueryPage['id_sender'];
-      db.QueryPageInfo.SQL.Text := 'SELECT * FROM users WHERE id = :id';
-      db.QueryPageInfo.ParamByName('id').AsInteger := sender;
-      db.QueryPageInfo.Open;
+        qCommentID := db.QueryPage['id'];
+      finally
 
-      qCommentID := db.QueryPage['id'];
+      end;
 
       if CommentAthor = true then
       begin
@@ -865,9 +888,13 @@ begin
         pUserComment[i].Font.Size := 10;
         pUserComment[i].Font.Color := clWindowFrame;
         pUserComment[i].Width := 300;
-        math := (length(pUserComment[i].Caption)+240)/5;
-        resultMath := trunc(math);
-        pUserComment[i].Height := resultMath;
+//        math := (length(pUserComment[i].Caption)+240)/5;
+//        resultMath := trunc(math);
+//        if (length(pUserComment[i].Caption) > 55) and (pUserComment[i].width > 295) then pUserComment[i].Height := 17;
+//        if length(pUserComment[i].Caption) > 110 then pUserComment[i].Height := 34;
+//        if length(pUserComment[i].Caption) > 165 then pUserComment[i].Height := 50;
+
+        pUserComment[i].Height := 17;
         pUserComment[i].AutoSize := false;
         pUserComment[i].WordWrap := true;
       end;
@@ -887,7 +914,7 @@ begin
         pLikeCount[i] := TLabel.Create(self);
         InsertControl(pLikeCount[i]);
         pLikeCount[i].Left := 230 + 45;
-        pLikeCount[i].Top := pUserComment[i].Top + 14 + 9;
+        pLikeCount[i].Top := pUserComment[i].Top + pUserComment[i].Height + 6;
         pLikeCount[i].Font.Color := clWindowFrame;
         pLikeCount[i].Font.Size := 10;
         pLikeCount[i].Font.Name := 'Arial';
@@ -897,7 +924,7 @@ begin
         InsertControl(pLikeComment[i]);
         pLikeComment[i].Width := 16;
         pLikeComment[i].Height := 16;
-        pLikeComment[i].Top := pUserComment[i].Top + 12 + 10;
+        pLikeComment[i].Top := pUserComment[i].Top + pUserComment[i].Height + 11;
         pLikeComment[i].Left := 230 + 50 + 6;
         pLikeComment[i].Cursor := crHandPoint;
         pLikeComment[i].Tag := qID;
@@ -915,7 +942,7 @@ begin
         pDislikeCount[i] := TLabel.Create(self);
         InsertControl(pDislikeCount[i]);
         pDislikeCount[i].Left := 230 + 81;
-        pDislikeCount[i].Top := pUserComment[i].Top + 14 + 9;
+        pDislikeCount[i].Top := pUserComment[i].Top + pUserComment[i].Height + 6;
         pDislikeCount[i].Font.Color := clWindowFrame;
         pDislikeCount[i].Font.Size := 10;
         pDislikeCount[i].Font.Name := 'Arial';
@@ -925,7 +952,7 @@ begin
         InsertControl(pDislikeComment[i]);
         pDislikeComment[i].Width := 16;
         pDislikeComment[i].Height := 16;
-        pDislikeComment[i].Top := pUserComment[i].Top + 12 + 10;
+        pDislikeComment[i].Top := pUserComment[i].Top + pUserComment[i].Height + 11;
         pDislikeComment[i].Left := 230 + 85 + pDislikeCount[i].Width;
         pDislikeComment[i].Tag := qID;
         pDislikeComment[i].Cursor := crHandPoint;
@@ -1156,9 +1183,17 @@ end;
 
 procedure TcontentPage.SendClick(Sender: TObject);
 begin
-  if (length(pAddComment.Lines.Text) > 128) or (length(pAddComment.Lines.Text) < 0) then
+  if (length(pAddComment.Lines.Text) > 64) or (length(pAddComment.Lines.Text) < 1) then
   begin
     showmessage('Длинна комментария должна быть не менее 1 и более 128 символов!');
+    exit;
+  end;
+  if pAddComment.Lines.Count > 1 then
+  begin
+    exit;
+  end;
+  if ansicomparetext(pAddComment.Lines.Text, 'Прокомментировать') = 0 then
+  begin
     exit;
   end;
 
@@ -1168,12 +1203,13 @@ begin
   db.QueryInsertComment.ParamByName('id_page').AsInteger := PageID;
   db.QueryInsertComment.ParamByName('comment').AsString := pAddComment.Lines.Text;
   db.QueryInsertComment.Execute;
-  LoadComment(contentOff, contentOn, contentOn, contentOn, contentOn);
+  LoadComment(contentOn, contentOn, contentOn, contentOn, contentOn);
 end;
 
 procedure TcontentPage.GoToContent(Sender: TObject);//Возвращение к контенту
 var i:integer;
 begin
+  for i := 1 to 4 do FreeAndNil(leftIcons[i]);
   FreeAndNil(pGoBack);
   FreeAndNil(pItem);
   FreeAndNil(pDownload);
@@ -1199,6 +1235,7 @@ begin
   end;
   isAdminClosed := false;
   FormActivate(self);
+//  LoadContent;
   FormPaint(self);
   shutdown_btn.BringToFront;
   collapse_btn.BringToFront;
@@ -1223,12 +1260,11 @@ begin
   end;
   if oldState <> StateType then
   begin
+    for i := 1 to 4 do FreeAndNil(leftIcons[i]);
     if oldState = 3 then
     begin
       for i := 1 to db.QueryContent.RecordCount do FreeAndNil(iTitle[i]);
       FreeAndNil(iText);
-      homePage.Show;
-      contentPage.close;
     end
     else
     begin
@@ -1241,14 +1277,8 @@ begin
         FreeAndNil(descriptionContent[i]);
       end;
     end;
-    for i := 1 to 4 do FreeAndNil(leftIcons[i]);
     LoadNav;
-    case StateType of
-    0:
-    1:
-    2:
-    3:
-    end;
+    LoadContent;
   end;
 end;
 
@@ -1423,8 +1453,11 @@ begin
       arrow_btn.Top := arrow_btn.Top + 10;
       scrollResult := scrollResult + 10;
       contentScroll.Top := contentScroll.Top + 15;
-      iAdminBtn.Top := iAdminBtn.Top + 10;
-      iAdmin.Top := iAdminBtn.Top + 2;
+      if isAdmin = true then
+      begin
+        iAdminBtn.Top := iAdminBtn.Top + 10;
+        iAdmin.Top := iAdminBtn.Top + 2;
+      end;
     end;
   end;
 end;
@@ -1440,8 +1473,11 @@ begin
       arrow_btn.Top := arrow_btn.Top - 10;
       scrollResult := scrollResult - 10;
       contentScroll.Top := contentScroll.Top - 15;
-      iAdminBtn.Top := iAdminBtn.Top - 10;
-      iAdmin.Top := iAdminBtn.Top;
+      if isAdmin = true then
+      begin
+        iAdminBtn.Top := iAdminBtn.Top - 10;
+        iAdmin.Top := iAdminBtn.Top;
+      end;
   end;
 end;
   //</mouseLogic>
